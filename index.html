@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>風險規則引擎沙盒</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
@@ -187,6 +185,21 @@
             background-color: #fff1f0;
             color: #f5222d;
         }
+        
+        tr.highlighted {
+            background-color: #e6f7ff !important;
+        }
+        
+        .log-panel {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+            max-height: 120px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -209,10 +222,10 @@
                                     <button id="custom-btn" class="btn btn-outline-primary" onclick="clearRules()">自訂決策</button>
                                 </div>
                                 <div class="form-group mb-0" style="flex: 1;">
-                                    <select class="form-select" id="risk-level">
-                                        <option value="low">低風險</option>
-                                        <option value="medium" selected>中風險</option>
-                                        <option value="high">高風險</option>
+                                    <select class="form-select" id="risk-level" onchange="executeRules()">
+                                        <option value="low">未命中：低風險</option>
+                                        <option value="medium" selected>未命中：中風險</option>
+                                        <option value="high">未命中：高風險</option>
                                     </select>
                                 </div>
                             </div>
@@ -224,11 +237,10 @@
                                 <div>拖放規則到此處</div>
                                 <small>從下方拖曳規則到此區域</small>
                             </div>
-                            <!-- Drop indicators will be added here -->
                             <div class="drop-indicator" id="drop-indicator"></div>
                         </div>
                         
-                        <button class="btn btn-dark w-100">
+                        <button class="btn btn-dark w-100" onclick="executeRules()">
                             <i class="fas fa-play me-2"></i>執行
                         </button>
                     </div>
@@ -238,7 +250,6 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title border-bottom pb-2">可用規則</h5>
-                        
                         <div id="available-rules">
                             <!-- Rules will be dynamically generated -->
                         </div>
@@ -250,10 +261,18 @@
                     <div class="card-body">
                         <div class="description-area" id="description-area">
                             <div class="d-flex align-items-start">
-                                <i class="fas fa-info-circle me-2 text-indigo-500 mt-1"></i>
+                                <i class="fas fa-info-circle me-2 text-primary mt-1"></i>
                                 <p class="mb-0" id="rule-description">將游標懸停在規則上可查看詳細描述。規則順序決定風險評估優先級。</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Log panel -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title border-bottom pb-2">執行日誌</h5>
+                        <div id="log-panel" class="log-panel"></div>
                     </div>
                 </div>
             </div>
@@ -276,58 +295,11 @@
                                         <th>IP所在地區</th>
                                         <th class="text-end">金額</th>
                                         <th class="text-end">設備風險</th>
+                                        <th>命中規則</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><i class="fas fa-check-circle text-success"></i></td>
-                                        <td class="font-monospace">05f2c088cf</td>
-                                        <td>344</td>
-                                        <td class="text-end">1</td>
-                                        <td class="text-end"><span class="risk-badge success">0.2</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fas fa-exclamation-circle text-danger"></i></td>
-                                        <td class="font-monospace">454653c25</td>
-                                        <td>408</td>
-                                        <td class="text-end">9,900</td>
-                                        <td class="text-end"><span class="risk-badge danger">-0.6</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fas fa-check-circle text-success"></i></td>
-                                        <td class="font-monospace">8yu723321</td>
-                                        <td>840</td>
-                                        <td class="text-end">20</td>
-                                        <td class="text-end"><span class="risk-badge success">0.9</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fas fa-exclamation-triangle text-warning"></i></td>
-                                        <td class="font-monospace">745h625g4</td>
-                                        <td>702</td>
-                                        <td class="text-end">700</td>
-                                        <td class="text-end"><span class="risk-badge warning">0</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fas fa-exclamation-circle text-danger"></i></td>
-                                        <td class="font-monospace">745h625g5</td>
-                                        <td>804</td>
-                                        <td class="text-end">200</td>
-                                        <td class="text-end"><span class="risk-badge danger">-0.8</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fas fa-exclamation-triangle text-warning"></i></td>
-                                        <td class="font-monospace">23662kop6</td>
-                                        <td>702</td>
-                                        <td class="text-end">290</td>
-                                        <td class="text-end"><span class="risk-badge warning">0.5</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><i class="fas fa-check-circle text-success"></i></td>
-                                        <td class="font-monospace">782642ds7</td>
-                                        <td>344</td>
-                                        <td class="text-end">800</td>
-                                        <td class="text-end"><span class="risk-badge success">0.3</span></td>
-                                    </tr>
+                                <tbody id="transaction-table">
+                                    <!-- Transactions will be dynamically generated -->
                                 </tbody>
                             </table>
                         </div>
@@ -337,22 +309,44 @@
         </div>
     </div>
     
-    <!-- Bootstrap JS Bundle -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     
     <script>
         // 定義所有規則
         const allRules = [
-            { id: '1', text: '小金額且設備低風險', level: 'success', description: '交易金額低於500元且來自已知安全設備，可自動通過' },
-            { id: '2', text: '1天內驗證成功，累積金額小於$1000', level: 'success', description: '用戶在過去24小時內已經完成驗證，且累積交易金額低於1000元' },
-            { id: '3', text: '設備中風險', level: 'warning', description: '使用者的設備風險評分在0.3至0.7之間，建議額外監控' },
-            { id: '4', text: '中高金額', level: 'warning', description: '單筆交易金額超過3000元，需要額外審核' },
-            { id: '5', text: '中高金額且來自高風險國家', level: 'danger', description: '偵測交易金額超過5000元且來源IP位於高風險國家清單中的交易' },
-            { id: '6', text: '短時間內來自不同國家', level: 'danger', description: '同一卡號在2小時內從2個以上不同國家發起交易，可能表示卡片被盜用' }
+            { id: '1', text: '小金額且設備低風險', level: 'success', description: '交易金額低於500元且來自已知安全設備，可自動通過', 
+              condition: (tx) => tx.amount < 500 && tx.deviceRisk > 0.2, 
+              action: 'APPROVE' },
+            { id: '2', text: '1天內驗證成功，累積金額小於$1000', level: 'success', description: '用戶在過去24小時內已經完成驗證，且累積交易金額低於1000元', 
+              condition: (tx) => tx.isVerified && tx.cumulativeAmount < 1000, 
+              action: 'APPROVE' },
+            { id: '3', text: '設備中風險', level: 'warning', description: '使用者的設備風險評分在0至0.5之間，建議額外監控', 
+              condition: (tx) => tx.deviceRisk >= 0 && tx.deviceRisk <= 0.5, 
+              action: 'REVIEW' },
+            { id: '4', text: '中高金額', level: 'warning', description: '單筆交易金額超過300元，需要額外審核', 
+              condition: (tx) => tx.amount > 300, 
+              action: 'REVIEW' },
+            { id: '5', text: '中高金額且來自高風險國家', level: 'danger', description: '偵測交易金額超過500元且來源IP位於高風險國家清單中的交易', 
+              condition: (tx) => tx.amount > 500 && (tx.countryCode === '408' || tx.countryCode === '804'), 
+              action: 'BLOCK' },
+            { id: '6', text: '設備高風險', level: 'danger', description: '設備風險評分為負數，可能表示有異常活動', 
+              condition: (tx) => tx.deviceRisk < 0, 
+              action: 'BLOCK' }
         ];
         
         // 預設規則ID列表（按優先順序）
         const defaultRuleIds = ['5', '6', '4', '3'];
+        
+        // 交易數據
+        const transactions = [
+            { id: 1, card: '05f2c088cf', countryCode: '344', amount: 100, deviceRisk: 0.2, isVerified: true, cumulativeAmount: 300 },
+            { id: 2, card: '454653c25', countryCode: '408', amount: 9900, deviceRisk: -0.6, isVerified: false, cumulativeAmount: 9900 },
+            { id: 3, card: '8yu723321', countryCode: '840', amount: 20, deviceRisk: 0.9, isVerified: true, cumulativeAmount: 100 },
+            { id: 4, card: '745h625g4', countryCode: '702', amount: 700, deviceRisk: 0, isVerified: true, cumulativeAmount: 2800 },
+            { id: 5, card: '745h625g5', countryCode: '804', amount: 200, deviceRisk: -0.8, isVerified: false, cumulativeAmount: 800 },
+            { id: 6, card: '23662kop6', countryCode: '702', amount: 290, deviceRisk: 0.5, isVerified: true, cumulativeAmount: 1200 },
+            { id: 7, card: '782642ds7', countryCode: '344', amount: 800, deviceRisk: 0.3, isVerified: true, cumulativeAmount: 800 }
+        ];
         
         // DOM元素
         const executionZone = document.getElementById('execution-zone');
@@ -361,19 +355,41 @@
         const dropIndicator = document.getElementById('drop-indicator');
         const defaultBtn = document.getElementById('default-btn');
         const customBtn = document.getElementById('custom-btn');
+        const transactionTable = document.getElementById('transaction-table');
+        const logPanel = document.getElementById('log-panel');
         
         // 初始化
         window.onload = function() {
             initializeRules();
+            loadTransactions();
             applyDefaultRules();
+            executeRules();
         };
+        
+        // 加載交易資料
+        function loadTransactions() {
+            transactionTable.innerHTML = '';
+            
+            transactions.forEach(tx => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-id', tx.id);
+                
+                row.innerHTML = `
+                    <td><i class="fas fa-circle-notch fa-spin text-secondary"></i></td>
+                    <td class="font-monospace">${tx.card}</td>
+                    <td>${tx.countryCode}</td>
+                    <td class="text-end">${tx.amount.toLocaleString()}</td>
+                    <td class="text-end"><span class="risk-badge ${tx.deviceRisk > 0.3 ? 'success' : tx.deviceRisk >= 0 ? 'warning' : 'danger'}">${tx.deviceRisk.toFixed(1)}</span></td>
+                    <td></td>
+                `;
+                
+                transactionTable.appendChild(row);
+            });
+        }
         
         // 初始化所有規則
         function initializeRules() {
-            // 清空可用規則區域
             availableRules.innerHTML = '';
-            
-            // 添加所有規則到可用區域
             allRules.forEach(rule => {
                 addRuleToAvailable(rule);
             });
@@ -387,7 +403,6 @@
         
         // 添加規則到可用區域
         function addRuleToAvailable(rule) {
-            // 檢查是否已存在
             if (document.querySelector(`#available-rules [data-id="${rule.id}"]`)) {
                 return;
             }
@@ -418,7 +433,6 @@
         
         // 創建規則克隆（用於執行區域）
         function createRuleClone(rule) {
-            // 可以是DOM元素或規則對象
             let ruleId, ruleLevel, ruleDescription, ruleText;
             
             if (rule instanceof Element) {
@@ -478,14 +492,12 @@
                 child.classList.contains('rule-item')
             );
             
-            // 如果沒有規則，顯示在最上方
             if (executionItems.length === 0) {
                 executionZone.insertBefore(dropIndicator, placeholder);
                 dropIndicator.classList.add('active');
                 return;
             }
             
-            // 找到最接近的規則
             let closestItem = null;
             let closestDistance = Number.MAX_VALUE;
             let position = 'before';
@@ -502,7 +514,6 @@
                 }
             });
             
-            // 顯示指示器
             if (closestItem) {
                 if (position === 'before') {
                     executionZone.insertBefore(dropIndicator, closestItem);
@@ -517,64 +528,52 @@
         function drop(event) {
             event.preventDefault();
             
-            // 隱藏指示器
             dropIndicator.classList.remove('active');
             
-            // 獲取規則ID
             const ruleId = event.dataTransfer.getData('text/plain');
-            
-            // 查找來源規則元素
             const sourceRule = document.querySelector(`[data-id="${ruleId}"]`);
             
             if (!sourceRule) return;
             
-            // 重置透明度
             sourceRule.style.opacity = '';
             
-            // 判斷來源區域
             const isFromAvailable = sourceRule.parentNode.id === 'available-rules';
             
             if (isFromAvailable) {
-                // 從可用區域拖到執行區域
                 const rule = allRules.find(r => r.id === ruleId);
                 if (!rule) return;
                 
-                // 創建新規則到執行區域
                 const newRule = createRuleClone(rule);
-                
-                // 插入到指示器位置或末尾
                 const insertBefore = dropIndicator.nextSibling || placeholder;
                 executionZone.insertBefore(newRule, insertBefore);
                 
-                // 從可用區域移除
                 sourceRule.remove();
             } else {
-                // 在執行區域內重新排序
                 const insertBefore = dropIndicator.nextSibling || placeholder;
                 executionZone.insertBefore(sourceRule, insertBefore);
             }
             
-            // 更新佔位符和按鈕狀態
             updatePlaceholder();
             updateButtonState();
+            
+            // 執行規則引擎
+            executeRules();
         }
         
         // 移除規則
         function removeRule(rule) {
             const ruleId = rule.getAttribute('data-id');
             
-            // 查找原始規則數據
             const originalRule = allRules.find(r => r.id === ruleId);
             if (originalRule) {
-                // 添加回可用區域
                 addRuleToAvailable(originalRule);
-                
-                // 從執行區域刪除
                 rule.remove();
                 
-                // 更新佔位符和按鈕狀態
                 updatePlaceholder();
                 updateButtonState();
+                
+                // 重新執行規則引擎
+                executeRules();
             }
         }
         
@@ -586,29 +585,22 @@
         
         // 更新按鈕狀態
         function updateButtonState() {
-            // 獲取當前執行區域的規則ID
             const currentRules = Array.from(
                 executionZone.querySelectorAll('.rule-item')
             ).map(rule => rule.getAttribute('data-id'));
             
-            // 檢查是否匹配預設規則
             const isDefault = isDefaultConfiguration(currentRules);
             
-            // 更新按鈕狀態
             defaultBtn.classList.toggle('active', isDefault);
             customBtn.classList.toggle('active', !isDefault);
         }
         
         // 檢查是否為預設配置
         function isDefaultConfiguration(currentRules) {
-            if (currentRules.length !== defaultRuleIds.length) {
-                return false;
-            }
+            if (currentRules.length !== defaultRuleIds.length) return false;
             
             for (let i = 0; i < defaultRuleIds.length; i++) {
-                if (currentRules[i] !== defaultRuleIds[i]) {
-                    return false;
-                }
+                if (currentRules[i] !== defaultRuleIds[i]) return false;
             }
             
             return true;
@@ -616,18 +608,14 @@
         
         // 應用預設規則
         function applyDefaultRules() {
-            // 清空當前規則
             clearRules();
             
-            // 添加預設規則
             defaultRuleIds.forEach(id => {
                 const rule = allRules.find(r => r.id === id);
                 if (rule) {
-                    // 添加到執行區域
                     const newRule = createRuleClone(rule);
                     executionZone.insertBefore(newRule, placeholder);
                     
-                    // 從可用區域移除
                     const availableRule = document.querySelector(`#available-rules [data-id="${id}"]`);
                     if (availableRule) {
                         availableRule.remove();
@@ -635,28 +623,172 @@
                 }
             });
             
-            // 更新佔位符和按鈕狀態
             updatePlaceholder();
             updateButtonState();
+            
+            // 執行規則引擎
+            executeRules();
         }
         
         // 清空所有規則
         function clearRules() {
-            // 清空執行區域
             const executionRules = executionZone.querySelectorAll('.rule-item');
             executionRules.forEach(rule => {
                 const ruleId = rule.getAttribute('data-id');
                 rule.remove();
                 
-                // 恢復到可用區域
                 const originalRule = allRules.find(r => r.id === ruleId);
                 if (originalRule) {
                     addRuleToAvailable(originalRule);
                 }
             });
             
-            // 更新佔位符
             updatePlaceholder();
+            
+            // 重置交易狀態
+            resetTransactionStatus();
+        }
+        
+        // 重置交易狀態
+        function resetTransactionStatus() {
+            const transactionRows = transactionTable.querySelectorAll('tr');
+            
+            transactionRows.forEach(row => {
+                const statusCell = row.querySelector('td:first-child');
+                const hitRuleCell = row.querySelector('td:last-child');
+                
+                statusCell.innerHTML = '<i class="fas fa-circle-notch fa-spin text-secondary"></i>';
+                hitRuleCell.textContent = '';
+                
+                row.classList.remove('highlighted');
+            });
+        }
+        
+        // 添加日誌
+        function addLog(message) {
+            const logEntry = document.createElement('div');
+            logEntry.textContent = '> ' + message;
+            logPanel.appendChild(logEntry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+        }
+        
+        // 清空日誌
+        function clearLog() {
+            logPanel.innerHTML = '';
+        }
+        
+        // 執行規則引擎
+        function executeRules() {
+            clearLog();
+            resetTransactionStatus();
+            
+            const activeRuleElements = executionZone.querySelectorAll('.rule-item');
+            const riskLevel = document.getElementById('risk-level').value;
+            
+            addLog(`風險等級設置為: ${riskLevel}`);
+            
+            if (activeRuleElements.length === 0) {
+                addLog(`沒有可用規則，所有交易設為${riskLevel}風險`);
+                
+                // 處理沒有規則時的預設行為
+                transactions.forEach(tx => {
+                    const row = document.querySelector(`#transaction-table tr[data-id="${tx.id}"]`);
+                    const statusCell = row.querySelector('td:first-child');
+                    const hitRuleCell = row.querySelector('td:last-child');
+                    
+                    hitRuleCell.textContent = '未命中任何規則';
+                    
+                    // 根據風險等級決定未命中規則的交易處理方式
+                    if (riskLevel === 'low') {
+                        statusCell.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+                    } else if (riskLevel === 'medium') {
+                        statusCell.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i>';
+                    } else if (riskLevel === 'high') {
+                        statusCell.innerHTML = '<i class="fas fa-exclamation-circle text-danger"></i>';
+                    }
+                    
+                    row.classList.add('highlighted');
+                });
+                
+                return;
+            }
+            
+            // 獲取當前活動規則
+            const activeRules = Array.from(activeRuleElements).map(ruleElement => {
+                const ruleId = ruleElement.getAttribute('data-id');
+                return allRules.find(r => r.id === ruleId);
+            }).filter(rule => rule !== undefined);
+            
+            // 處理每個交易
+            transactions.forEach(tx => {
+                processTransaction(tx, activeRules, riskLevel);
+            });
+        }
+        
+        // 處理單筆交易
+        function processTransaction(transaction, activeRules, riskLevel) {
+            const row = document.querySelector(`#transaction-table tr[data-id="${transaction.id}"]`);
+            const statusCell = row.querySelector('td:first-child');
+            const hitRuleCell = row.querySelector('td:last-child');
+            
+            let matchedRule = null;
+            // 初始動作根據風險等級設置
+            let action = getDefaultActionByRiskLevel(riskLevel);
+            
+            // 依序執行規則
+            for (const rule of activeRules) {
+                if (rule.condition(transaction)) {
+                    matchedRule = rule;
+                    action = rule.action;
+                    
+                    // 基於風險等級調整行動
+                    if (riskLevel === 'low' && action === 'BLOCK') {
+                        action = 'REVIEW';
+                    } else if (riskLevel === 'high' && action === 'APPROVE') {
+                        action = 'REVIEW';
+                    }
+                    
+                    // 記錄命中的規則
+                    hitRuleCell.textContent = rule.text;
+                    addLog(`交易 ${transaction.card} 命中規則: ${rule.text}`);
+                    
+                    break; // 找到第一個符合的規則就停止
+                }
+            }
+            
+            // 更新交易狀態
+            if (action === 'APPROVE') {
+                statusCell.innerHTML = '<i class="fas fa-check-circle text-success"></i>';
+                row.classList.add('highlighted');
+            } else if (action === 'REVIEW') {
+                statusCell.innerHTML = '<i class="fas fa-exclamation-triangle text-warning"></i>';
+                row.classList.add('highlighted');
+            } else if (action === 'BLOCK') {
+                statusCell.innerHTML = '<i class="fas fa-exclamation-circle text-danger"></i>';
+                row.classList.add('highlighted');
+            } else {
+                statusCell.innerHTML = '<i class="fas fa-question-circle text-secondary"></i>';
+            }
+            
+            // 沒有命中規則的情況
+            if (!matchedRule) {
+                hitRuleCell.textContent = '未命中任何規則';
+                addLog(`交易 ${transaction.card} 未命中任何規則，採用${riskLevel}風險預設行為`);
+            }
+        }
+        
+        // 根據風險等級獲取預設行為
+        function getDefaultActionByRiskLevel(riskLevel) {
+            switch(riskLevel) {
+                case 'low':
+                    return 'APPROVE';
+                case 'medium':
+                    return 'REVIEW';
+                case 'high':
+                    return 'BLOCK';
+                default:
+                    return 'REVIEW';
+            }
         }
     </script>
 </body>
