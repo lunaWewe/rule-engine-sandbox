@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>風險規則引擎沙盒</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            min-height: 100vh;
+            padding: 20px;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        .title-area {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: none;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+        
+        .rule-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: move;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .rule-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .rule-item.success {
+            border-left: 4px solid #10b981;
+            background-color: #ecfdf5;
+        }
+        
+        .rule-item.warning {
+            border-left: 4px solid #f59e0b;
+            background-color: #fffbeb;
+        }
+        
+        .rule-item.danger {
+            border-left: 4px solid #ef4444;
+            background-color: #fef2f2;
+        }
+        
+        .rule-icon {
+            display: inline-flex;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .rule-icon.success {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .rule-icon.warning {
+            background-color: #f59e0b;
+            color: white;
+        }
+        
+        .rule-icon.danger {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        .rule-actions {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+        }
+        
+        .rule-item:hover .rule-actions {
+            display: flex;
+        }
+        
+        .rule-actions button, .btn-action {
+            border: none;
+            background: none;
+            padding: 4px;
+            margin-left: 4px;
+            color: #6b7280;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .rule-actions button:hover, .btn-action:hover {
+            color: #1890ff;
+        }
+        
+        .rule-actions .fa-times:hover {
+            color: #f5222d;
+        }
+        
+        .handle {
+            cursor: grab;
+        }
+        
+        .drop-zone {
+            min-height: 150px;
+            border: 2px dashed #d9d9d9;
+            border-radius: 4px;
+            background-color: #fafafa;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .drop-zone-placeholder {
+            color: #999;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .drop-indicator {
+            height: 2px;
+            background-color: #1890ff;
+            margin: 5px 0;
+            display: none;
+        }
+        
+        .drop-indicator.active {
+            display: block;
+        }
+        
+        .description-area {
+            min-height: 80px;
+            padding: 15px;
+            background-color: #fafafa;
+            border-radius: 4px;
+            border-left: 4px solid #1890ff;
+        }
+        
+        .transaction-table th {
+            background-color: #001529;
+            color: white;
+            border: none;
+        }
+        
+        .transaction-table tbody tr:nth-child(odd) {
+            background-color: #f5f5f5;
+        }
+        
+        .transaction-table tbody tr:hover {
+            background-color: #e6f7ff;
+        }
+        
+        .risk-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .risk-badge.success {
+            background-color: #f6ffed;
+            color: #52c41a;
+        }
+        
+        .risk-badge.warning {
+            background-color: #fffbe6;
+            color: #faad14;
+        }
+        
+        .risk-badge.danger {
+            background-color: #fff1f0;
+            color: #f5222d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-area">
+            <h2>風險規則引擎沙盒</h2>
+            <p class="text-muted">拖放規則到執行區域以建立風險策略，可調整規則順序</p>
+        </div>
+        
+        <div class="row">
+            <!-- Left panel -->
+            <div class="col-md-4">
+                <!-- Policy selection -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group me-2" style="flex: 1;">
+                                    <button id="default-btn" class="btn btn-outline-primary active" onclick="applyDefaultRules()">預設決策</button>
+                                    <button id="custom-btn" class="btn btn-outline-primary" onclick="clearRules()">自訂決策</button>
+                                </div>
+                                <div class="form-group mb-0" style="flex: 1;">
+                                    <select class="form-select" id="risk-level">
+                                        <option value="low">低風險</option>
+                                        <option value="medium" selected>中風險</option>
+                                        <option value="high">高風險</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Drop zone for rules -->
+                        <div id="execution-zone" class="drop-zone" ondragover="allowDrop(event);" ondrop="drop(event)">
+                            <div class="drop-zone-placeholder" id="zone-placeholder">
+                                <div>拖放規則到此處</div>
+                                <small>從下方拖曳規則到此區域</small>
+                            </div>
+                            <!-- Drop indicators will be added here -->
+                            <div class="drop-indicator" id="drop-indicator"></div>
+                        </div>
+                        
+                        <button class="btn btn-dark w-100">
+                            <i class="fas fa-play me-2"></i>執行
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Available rules -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title border-bottom pb-2">可用規則</h5>
+                        
+                        <div id="available-rules">
+                            <!-- Rules will be dynamically generated -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Description area -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="description-area" id="description-area">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-info-circle me-2 text-indigo-500 mt-1"></i>
+                                <p class="mb-0" id="rule-description">將游標懸停在規則上可查看詳細描述。規則順序決定風險評估優先級。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right panel - Transaction Table -->
+            <div class="col-md-8">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">交易監控</h5>
+                            <div class="text-muted small">風險規則將套用於此表格中的交易</div>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table transaction-table">
+                                <thead>
+                                    <tr>
+                                        <th>狀態</th>
+                                        <th>卡號</th>
+                                        <th>IP所在地區</th>
+                                        <th class="text-end">金額</th>
+                                        <th class="text-end">設備風險</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><i class="fas fa-check-circle text-success"></i></td>
+                                        <td class="font-monospace">05f2c088cf</td>
+                                        <td>344</td>
+                                        <td class="text-end">1</td>
+                                        <td class="text-end"><span class="risk-badge success">0.2</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fas fa-exclamation-circle text-danger"></i></td>
+                                        <td class="font-monospace">454653c25</td>
+                                        <td>408</td>
+                                        <td class="text-end">9,900</td>
+                                        <td class="text-end"><span class="risk-badge danger">-0.6</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fas fa-check-circle text-success"></i></td>
+                                        <td class="font-monospace">8yu723321</td>
+                                        <td>840</td>
+                                        <td class="text-end">20</td>
+                                        <td class="text-end"><span class="risk-badge success">0.9</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fas fa-exclamation-triangle text-warning"></i></td>
+                                        <td class="font-monospace">745h625g4</td>
+                                        <td>702</td>
+                                        <td class="text-end">700</td>
+                                        <td class="text-end"><span class="risk-badge warning">0</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fas fa-exclamation-circle text-danger"></i></td>
+                                        <td class="font-monospace">745h625g5</td>
+                                        <td>804</td>
+                                        <td class="text-end">200</td>
+                                        <td class="text-end"><span class="risk-badge danger">-0.8</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fas fa-exclamation-triangle text-warning"></i></td>
+                                        <td class="font-monospace">23662kop6</td>
+                                        <td>702</td>
+                                        <td class="text-end">290</td>
+                                        <td class="text-end"><span class="risk-badge warning">0.5</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="fas fa-check-circle text-success"></i></td>
+                                        <td class="font-monospace">782642ds7</td>
+                                        <td>344</td>
+                                        <td class="text-end">800</td>
+                                        <td class="text-end"><span class="risk-badge success">0.3</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // 定義所有規則
+        const allRules = [
+            { id: '1', text: '小金額且設備低風險', level: 'success', description: '交易金額低於500元且來自已知安全設備，可自動通過' },
+            { id: '2', text: '1天內驗證成功，累積金額小於$1000', level: 'success', description: '用戶在過去24小時內已經完成驗證，且累積交易金額低於1000元' },
+            { id: '3', text: '設備中風險', level: 'warning', description: '使用者的設備風險評分在0.3至0.7之間，建議額外監控' },
+            { id: '4', text: '中高金額', level: 'warning', description: '單筆交易金額超過3000元，需要額外審核' },
+            { id: '5', text: '中高金額且來自高風險國家', level: 'danger', description: '偵測交易金額超過5000元且來源IP位於高風險國家清單中的交易' },
+            { id: '6', text: '短時間內來自不同國家', level: 'danger', description: '同一卡號在2小時內從2個以上不同國家發起交易，可能表示卡片被盜用' }
+        ];
+        
+        // 預設規則ID列表（按優先順序）
+        const defaultRuleIds = ['5', '6', '4', '3'];
+        
+        // DOM元素
+        const executionZone = document.getElementById('execution-zone');
+        const availableRules = document.getElementById('available-rules');
+        const placeholder = document.getElementById('zone-placeholder');
+        const dropIndicator = document.getElementById('drop-indicator');
+        const defaultBtn = document.getElementById('default-btn');
+        const customBtn = document.getElementById('custom-btn');
+        
+        // 初始化
+        window.onload = function() {
+            initializeRules();
+            applyDefaultRules();
+        };
+        
+        // 初始化所有規則
+        function initializeRules() {
+            // 清空可用規則區域
+            availableRules.innerHTML = '';
+            
+            // 添加所有規則到可用區域
+            allRules.forEach(rule => {
+                addRuleToAvailable(rule);
+            });
+        }
+        
+        // 顯示規則描述
+        function showDescription(element) {
+            const description = element.getAttribute('data-description');
+            document.getElementById('rule-description').textContent = description;
+        }
+        
+        // 添加規則到可用區域
+        function addRuleToAvailable(rule) {
+            // 檢查是否已存在
+            if (document.querySelector(`#available-rules [data-id="${rule.id}"]`)) {
+                return;
+            }
+            
+            const ruleElement = document.createElement('div');
+            ruleElement.className = `rule-item ${rule.level}`;
+            ruleElement.draggable = true;
+            ruleElement.setAttribute('ondragstart', 'dragStart(event)');
+            ruleElement.setAttribute('data-id', rule.id);
+            ruleElement.setAttribute('data-level', rule.level);
+            ruleElement.setAttribute('data-description', rule.description);
+            ruleElement.setAttribute('onmouseenter', 'showDescription(this)');
+            
+            ruleElement.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="rule-icon ${rule.level}">
+                        <i class="fas fa-${rule.level === 'success' ? 'check' : rule.level === 'warning' ? 'exclamation-triangle' : 'exclamation-circle'}"></i>
+                    </div>
+                    <span>${rule.text}</span>
+                </div>
+                <div class="rule-actions">
+                    <i class="fas fa-arrows-alt handle"></i>
+                </div>
+            `;
+            
+            availableRules.appendChild(ruleElement);
+        }
+        
+        // 創建規則克隆（用於執行區域）
+        function createRuleClone(rule) {
+            // 可以是DOM元素或規則對象
+            let ruleId, ruleLevel, ruleDescription, ruleText;
+            
+            if (rule instanceof Element) {
+                ruleId = rule.getAttribute('data-id');
+                ruleLevel = rule.getAttribute('data-level');
+                ruleDescription = rule.getAttribute('data-description');
+                ruleText = rule.querySelector('.d-flex span').textContent;
+            } else {
+                ruleId = rule.id;
+                ruleLevel = rule.level;
+                ruleDescription = rule.description;
+                ruleText = rule.text;
+            }
+            
+            const clone = document.createElement('div');
+            clone.className = `rule-item ${ruleLevel}`;
+            clone.draggable = true;
+            clone.setAttribute('ondragstart', 'dragStart(event)');
+            clone.setAttribute('data-id', ruleId);
+            clone.setAttribute('data-level', ruleLevel);
+            clone.setAttribute('data-description', ruleDescription);
+            clone.setAttribute('onmouseenter', 'showDescription(this)');
+            
+            clone.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="rule-icon ${ruleLevel}">
+                        <i class="fas fa-${ruleLevel === 'success' ? 'check' : ruleLevel === 'warning' ? 'exclamation-triangle' : 'exclamation-circle'}"></i>
+                    </div>
+                    <span>${ruleText}</span>
+                </div>
+                <div class="rule-actions">
+                    <i class="fas fa-arrows-alt handle"></i>
+                    <button class="btn-action" onclick="removeRule(this.parentNode.parentNode)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            return clone;
+        }
+        
+        // 拖動開始處理
+        function dragStart(event) {
+            event.dataTransfer.setData('text/plain', event.target.getAttribute('data-id'));
+            event.target.style.opacity = '0.4';
+        }
+        
+        // 允許放置
+        function allowDrop(event) {
+            event.preventDefault();
+            showDropIndicator(event);
+        }
+        
+        // 顯示放置指示器
+        function showDropIndicator(event) {
+            const executionItems = Array.from(executionZone.children).filter(child => 
+                child.classList.contains('rule-item')
+            );
+            
+            // 如果沒有規則，顯示在最上方
+            if (executionItems.length === 0) {
+                executionZone.insertBefore(dropIndicator, placeholder);
+                dropIndicator.classList.add('active');
+                return;
+            }
+            
+            // 找到最接近的規則
+            let closestItem = null;
+            let closestDistance = Number.MAX_VALUE;
+            let position = 'before';
+            
+            executionItems.forEach(item => {
+                const rect = item.getBoundingClientRect();
+                const itemMiddle = rect.top + rect.height / 2;
+                const distance = Math.abs(event.clientY - itemMiddle);
+                
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestItem = item;
+                    position = event.clientY < itemMiddle ? 'before' : 'after';
+                }
+            });
+            
+            // 顯示指示器
+            if (closestItem) {
+                if (position === 'before') {
+                    executionZone.insertBefore(dropIndicator, closestItem);
+                } else {
+                    executionZone.insertBefore(dropIndicator, closestItem.nextSibling);
+                }
+                dropIndicator.classList.add('active');
+            }
+        }
+        
+        // 放置處理
+        function drop(event) {
+            event.preventDefault();
+            
+            // 隱藏指示器
+            dropIndicator.classList.remove('active');
+            
+            // 獲取規則ID
+            const ruleId = event.dataTransfer.getData('text/plain');
+            
+            // 查找來源規則元素
+            const sourceRule = document.querySelector(`[data-id="${ruleId}"]`);
+            
+            if (!sourceRule) return;
+            
+            // 重置透明度
+            sourceRule.style.opacity = '';
+            
+            // 判斷來源區域
+            const isFromAvailable = sourceRule.parentNode.id === 'available-rules';
+            
+            if (isFromAvailable) {
+                // 從可用區域拖到執行區域
+                const rule = allRules.find(r => r.id === ruleId);
+                if (!rule) return;
+                
+                // 創建新規則到執行區域
+                const newRule = createRuleClone(rule);
+                
+                // 插入到指示器位置或末尾
+                const insertBefore = dropIndicator.nextSibling || placeholder;
+                executionZone.insertBefore(newRule, insertBefore);
+                
+                // 從可用區域移除
+                sourceRule.remove();
+            } else {
+                // 在執行區域內重新排序
+                const insertBefore = dropIndicator.nextSibling || placeholder;
+                executionZone.insertBefore(sourceRule, insertBefore);
+            }
+            
+            // 更新佔位符和按鈕狀態
+            updatePlaceholder();
+            updateButtonState();
+        }
+        
+        // 移除規則
+        function removeRule(rule) {
+            const ruleId = rule.getAttribute('data-id');
+            
+            // 查找原始規則數據
+            const originalRule = allRules.find(r => r.id === ruleId);
+            if (originalRule) {
+                // 添加回可用區域
+                addRuleToAvailable(originalRule);
+                
+                // 從執行區域刪除
+                rule.remove();
+                
+                // 更新佔位符和按鈕狀態
+                updatePlaceholder();
+                updateButtonState();
+            }
+        }
+        
+        // 更新佔位符顯示
+        function updatePlaceholder() {
+            const hasRules = executionZone.querySelectorAll('.rule-item').length > 0;
+            placeholder.style.display = hasRules ? 'none' : 'block';
+        }
+        
+        // 更新按鈕狀態
+        function updateButtonState() {
+            // 獲取當前執行區域的規則ID
+            const currentRules = Array.from(
+                executionZone.querySelectorAll('.rule-item')
+            ).map(rule => rule.getAttribute('data-id'));
+            
+            // 檢查是否匹配預設規則
+            const isDefault = isDefaultConfiguration(currentRules);
+            
+            // 更新按鈕狀態
+            defaultBtn.classList.toggle('active', isDefault);
+            customBtn.classList.toggle('active', !isDefault);
+        }
+        
+        // 檢查是否為預設配置
+        function isDefaultConfiguration(currentRules) {
+            if (currentRules.length !== defaultRuleIds.length) {
+                return false;
+            }
+            
+            for (let i = 0; i < defaultRuleIds.length; i++) {
+                if (currentRules[i] !== defaultRuleIds[i]) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        // 應用預設規則
+        function applyDefaultRules() {
+            // 清空當前規則
+            clearRules();
+            
+            // 添加預設規則
+            defaultRuleIds.forEach(id => {
+                const rule = allRules.find(r => r.id === id);
+                if (rule) {
+                    // 添加到執行區域
+                    const newRule = createRuleClone(rule);
+                    executionZone.insertBefore(newRule, placeholder);
+                    
+                    // 從可用區域移除
+                    const availableRule = document.querySelector(`#available-rules [data-id="${id}"]`);
+                    if (availableRule) {
+                        availableRule.remove();
+                    }
+                }
+            });
+            
+            // 更新佔位符和按鈕狀態
+            updatePlaceholder();
+            updateButtonState();
+        }
+        
+        // 清空所有規則
+        function clearRules() {
+            // 清空執行區域
+            const executionRules = executionZone.querySelectorAll('.rule-item');
+            executionRules.forEach(rule => {
+                const ruleId = rule.getAttribute('data-id');
+                rule.remove();
+                
+                // 恢復到可用區域
+                const originalRule = allRules.find(r => r.id === ruleId);
+                if (originalRule) {
+                    addRuleToAvailable(originalRule);
+                }
+            });
+            
+            // 更新佔位符
+            updatePlaceholder();
+        }
+    </script>
+</body>
+</html>
