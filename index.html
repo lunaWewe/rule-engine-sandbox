@@ -586,193 +586,233 @@
         };
         
         
-        // 更新世界地圖的交易資料
-        function updateWorldMap() {
-            if (!worldMap) {
-                console.error('地圖未初始化');
-                return;
-            }
-            
-            // 檢查地圖是否已成功註冊
-            if (!echarts.getMap('world')) {
-                console.error('世界地圖數據尚未完全加載');
-                addLog('地圖數據尚未完全載入，無法更新');
-                return;
-            }
-            
-            // 顯示更新中狀態
-            worldMap.showLoading({
-                text: '更新地圖數據...',
-                maskColor: 'rgba(255, 255, 255, 0.5)',
-                textColor: '#1890ff'
-            });
-            
-            try {
-                // 統計每個國家的交易數量和風險級別
-                const countryCounts = {};
-                const countryRiskLevels = {};
-                
-                // 獲取執行過風險規則的交易
-                const rows = document.querySelectorAll('#transaction-table tr');
-                
-                rows.forEach(function(row) {
-                    const txId = row.getAttribute('data-id');
-                    if (!txId) return;
-                    
-                    const tx = transactions.find(t => t.id == txId);
-                    if (!tx) return;
-                    
-                    // 檢查交易狀態
-                    const statusIcon = row.querySelector('td:first-child i');
-                    let riskLevel = 'medium'; // 默認中風險
-                    
-                    if (statusIcon) {
-                        if (statusIcon.classList.contains('text-success')) {
-                            riskLevel = 'low';
-                        } else if (statusIcon.classList.contains('text-warning')) {
-                            riskLevel = 'medium';
-                        } else if (statusIcon.classList.contains('text-danger')) {
-                            riskLevel = 'high';
-                        }
-                    }
-                    
-                    // 累計數量和風險
-                    if (!countryCounts[tx.countryCode]) {
-                        countryCounts[tx.countryCode] = 0;
-                        countryRiskLevels[tx.countryCode] = [];
-                    }
-                    
-                    countryCounts[tx.countryCode]++;
-                    countryRiskLevels[tx.countryCode].push(riskLevel);
-                });
-                
-                // 計算每個國家的平均風險級別
-                const countryAverageRisk = {};
-                for (const countryCode in countryRiskLevels) {
-                    const risks = countryRiskLevels[countryCode];
-                    let riskScore = 0;
-                    
-                    risks.forEach(function(risk) {
-                        if (risk === 'low') riskScore += 1;
-                        else if (risk === 'medium') riskScore += 2;
-                        else if (risk === 'high') riskScore += 3;
-                    });
-                    
-                    countryAverageRisk[countryCode] = riskScore / risks.length;
-                }
-                
-                // 格式化 ECharts 資料
-                const mapData = Object.keys(countryCounts).map(function(code) {
-                    // 獲取國家的ECharts名稱
-                    const echartsName = countryEChartsMap[code];
-                    // 如果找不到對應，使用ISO數字代碼
-                    return {
-                        name: echartsName || code,
-                        value: countryCounts[code],
-                        riskLevel: countryAverageRisk[code],
-                        // 儲存原始代碼用於提示框
-                        originalCode: code
-                    };
-                });
-                
-                // 地圖配置
-                const option = {
-                    backgroundColor: '#fff',
-                    title: {
-                        text: '交易風險地區分佈',
-                        subtext: '顏色代表風險等級',
-                        left: 'center',
-                        top: 10
-                    },
-                    tooltip: {
-                        trigger: 'item',
-                        formatter: function(params) {
-                            if (params.data && params.data.originalCode) {
-                                const countryCode = params.data.originalCode;
-                                const localName = countryMap[countryCode] || countryCode;
-                                const riskLevel = params.data.riskLevel;
-                                let riskText = '中';
-                                
-                                if (riskLevel < 1.67) riskText = '低';
-                                else if (riskLevel > 2.33) riskText = '高';
-                                
-                                return `${localName}<br/>交易數量: ${params.value} 筆<br/>風險等級: ${riskText}`;
-                            }
-                            return params.name;
-                        }
-                    },
-                    visualMap: {
-                        show: true,
-                        min: 0,
-                        max: Math.max(...Object.values(countryCounts), 3),
-                        calculable: true,
-                        inRange: {
-                            color: ['#e0f2fe', '#0284c7']
-                        },
-                        text: ['多', '少'],
-                        left: 'left',
-                        top: 'bottom',
-                        textStyle: {
-                            color: '#333'
-                        }
-                    },
-                    series: [
-                        {
-                            name: '交易數量',
-                            type: 'map',
-                            map: 'world',
-                            aspectScale: 0.75,
-                            roam: true,
-                            zoom: 1.2,
-                            selectedMode: false,
-                            label: {
-                                show: false
-                            },
-                            emphasis: {
-                                label: {
-                                    show: true,
-                                    fontSize: 10,
-                                    color: '#333'
-                                },
-                                itemStyle: {
-                                    areaColor: '#e6f7ff'
-                                }
-                            },
-                            data: mapData,
-                            // 自定義風險顏色
-                            itemStyle: {
-                                areaColor: '#f5f5f5',
-                                borderColor: '#ccc',
-                                borderWidth: 0.5
-                            }
-                        }
-                    ]
-                };
-                
-                // 添加風險顏色覆蓋
-                const colorizedData = mapData.map(item => {
-                    return {
-                        ...item,
-                        itemStyle: {
-                            areaColor: getColorByRiskLevel(item.riskLevel)
-                        }
-                    };
-                });
-                
-                option.series[0].data = colorizedData;
-                
-                // 設定配置並渲染
-                worldMap.setOption(option);
-                worldMap.hideLoading();
-                
-                addLog('地圖更新完成: 顯示 ' + mapData.length + ' 個國家的交易資料');
-            } catch (error) {
-                console.error('更新地圖時發生錯誤:', error);
-                worldMap.hideLoading();
-                addLog('地圖更新失敗: ' + error.message);
-            }
-        }
+    
+    // 更新世界地圖的交易資料 - 修改為顯示高風險交易數量
+    function updateWorldMap() {
+    if (!worldMap) {
+        console.error('地圖未初始化');
+        return;
+    }
+    
+    // 檢查地圖是否已成功註冊
+    if (!echarts.getMap('world')) {
+        console.error('世界地圖數據尚未完全加載');
+        addLog('地圖數據尚未完全載入，無法更新');
+        return;
+    }
+    
+    // 顯示更新中狀態
+    worldMap.showLoading({
+        text: '更新地圖數據...',
+        maskColor: 'rgba(255, 255, 255, 0.5)',
+        textColor: '#1890ff'
+    });
+    
+    try {
+        // 統計每個國家的交易數量和高風險交易數量
+        const countryCounts = {};
+        const countryHighRiskCounts = {};
         
+        // 獲取執行過風險規則的交易
+        const rows = document.querySelectorAll('#transaction-table tr');
+        
+        rows.forEach(function(row) {
+            const txId = row.getAttribute('data-id');
+            if (!txId) return;
+            
+            const tx = transactions.find(t => t.id == txId);
+            if (!tx) return;
+            
+            // 檢查交易狀態 - 是否為高風險
+            const statusIcon = row.querySelector('td:first-child i');
+            let isHighRisk = false;
+            
+            if (statusIcon && statusIcon.classList.contains('text-danger')) {
+                isHighRisk = true;
+            }
+            
+            // 累計數量和高風險交易
+            if (!countryCounts[tx.countryCode]) {
+                countryCounts[tx.countryCode] = 0;
+                countryHighRiskCounts[tx.countryCode] = 0;
+            }
+            
+            countryCounts[tx.countryCode]++;
+            if (isHighRisk) {
+                countryHighRiskCounts[tx.countryCode]++;
+            }
+        });
+        
+        // 格式化 ECharts 資料
+        const mapData = Object.keys(countryCounts).map(function(code) {
+            // 獲取國家的ECharts名稱
+            const echartsName = countryEChartsMap[code];
+            const totalCount = countryCounts[code];
+            const highRiskCount = countryHighRiskCounts[code];
+            
+            // 如果找不到對應，使用ISO數字代碼
+            return {
+                name: echartsName || code,
+                value: highRiskCount,  // 使用高風險交易數量作為值
+                totalCount: totalCount,
+                highRiskCount: highRiskCount,
+                highRiskPercentage: totalCount > 0 ? Math.round((highRiskCount / totalCount) * 100) : 0,
+                // 儲存原始代碼用於提示框
+                originalCode: code
+            };
+        });
+        
+        // 找出最大的高風險交易數量，至少為1
+        const maxHighRiskCount = Math.max(...Object.values(countryHighRiskCounts), 1);
+        
+        // 地圖配置
+        const option = {
+            backgroundColor: '#fff',
+            title: {
+                text: '交易高風險地區分佈',
+                subtext: '顏色深淺代表高風險交易數量',
+                left: 'center',
+                top: 10
+            },
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    if (params.data && params.data.originalCode) {
+                        const countryCode = params.data.originalCode;
+                        const localName = countryMap[countryCode] || countryCode;
+                        const totalCount = params.data.totalCount;
+                        const highRiskCount = params.data.highRiskCount;
+                        const highRiskPercentage = params.data.highRiskPercentage;
+                        
+                        return `${localName}<br/>
+                                總交易數量: ${totalCount} 筆<br/>
+                                高風險交易: ${highRiskCount} 筆<br/>
+                                高風險比例: ${highRiskPercentage}%`;
+                    }
+                    return params.name;
+                }
+            },
+            visualMap: {
+                show: true,
+                min: 0,
+                max: maxHighRiskCount,
+                calculable: true,
+                inRange: {
+                    color: ['#fee2e2', '#ef4444']  // 從淺紅到深紅
+                },
+                text: ['高風險交易多', '高風險交易少'],
+                left: 'left',
+                top: 'bottom',
+                textStyle: {
+                    color: '#333'
+                }
+            },
+            series: [
+                {
+                    name: '高風險交易',
+                    type: 'map',
+                    map: 'world',
+                    aspectScale: 0.75,
+                    roam: true,
+                    zoom: 1.2,
+                    selectedMode: false,
+                    label: {
+                        show: false
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: 10,
+                            color: '#333'
+                        },
+                        itemStyle: {
+                            areaColor: '#fecaca'
+                        }
+                    },
+                    data: mapData,
+                    itemStyle: {
+                        areaColor: '#f5f5f5',
+                        borderColor: '#ccc',
+                        borderWidth: 0.5
+                    }
+                }
+            ]
+        };
+        
+        // 設定配置並渲染
+        worldMap.setOption(option);
+        worldMap.hideLoading();
+        
+        addLog('地圖更新完成: 顯示 ' + mapData.length + ' 個國家的高風險交易資料');
+    } catch (error) {
+        console.error('更新地圖時發生錯誤:', error);
+        worldMap.hideLoading();
+        addLog('地圖更新失敗: ' + error.message);
+    }
+}
+
+    // 初始化世界地圖
+    function initWorldMap() {
+        const chartDom = document.getElementById('world-map');
+        if (!chartDom) return;
+        
+        // 初始化ECharts實例
+        worldMap = echarts.init(chartDom);
+        
+        // 顯示加載中狀態
+        worldMap.showLoading({
+            text: '加載世界地圖數據中...',
+            maskColor: 'rgba(255, 255, 255, 0.8)',
+            textColor: '#1890ff'
+        });
+        
+        // 註冊世界地圖
+        fetch('./wMap.json')  // 使用相對路徑指向你存放的位置
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('無法獲取地圖數據: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(worldJson => {
+            // 地圖數據加載成功
+            echarts.registerMap('world', worldJson);
+            worldMap.hideLoading();
+            addLog('世界地圖數據加載成功');
+            
+            // 嘗試設置初始地圖視圖
+            try {
+                setInitialMapView();
+            } catch(e) {
+                console.error('設置初始視圖失敗:', e);
+                addLog('初始視圖設置失敗，但地圖已加載');
+            }
+        })
+        .catch(error => {
+            addLog('加載地圖數據失敗: ' + error.message);
+            // 可以提供一個備用選項或顯示錯誤信息
+        });
+        
+        // 處理視窗大小調整
+        window.addEventListener('resize', function() {
+            if (worldMap) {
+                worldMap.resize();
+            }
+        });
+    }
+
+    // 設置初始地圖視圖 (如果這個函數不存在，可以添加一個空函數)
+    function setInitialMapView() {
+        if (worldMap) {
+            worldMap.setOption({
+                series: [{
+                    center: [0, 30],
+                    zoom: 1.2
+                }]
+            });
+        }
+    }
+
         // 加載交易資料
         function loadTransactions() {
             transactionTable.innerHTML = '';
