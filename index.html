@@ -214,6 +214,7 @@
             overflow-y: auto;
             font-family: monospace;
             font-size: 12px;
+            min-height: 120px;
         }
         
         .available-rules-card {
@@ -265,6 +266,83 @@
             right: 10px;
             z-index: 100;
             font-size: 12px;
+        }
+
+        /* 添加以下 CSS 樣式到您的樣式表中 */
+
+        /* 限制表格容器的最大寬度 */
+        .table-container {
+        max-width: 100%;
+        overflow-x: auto;
+        /* 為捲軸添加一些內距，避免內容太靠近底部 */
+        padding-bottom: 5px;
+        }
+
+        /* 確保表格內容不會被壓縮 */
+        .transaction-table {
+        width: 100%;
+        /* 設定表格的最小寬度，確保內容不會被壓縮 */
+        min-width: 750px;
+        }
+
+        /* 定義各列的固定寬度 */
+        .transaction-table th:nth-child(1), 
+        .transaction-table td:nth-child(1) {
+        width: 60px;
+        }
+
+        .transaction-table th:nth-child(2), 
+        .transaction-table td:nth-child(2) {
+        width: 120px;
+        }
+
+        .transaction-table th:nth-child(3), 
+        .transaction-table td:nth-child(3) {
+        width: 150px;
+        }
+
+        .transaction-table th:nth-child(4), 
+        .transaction-table td:nth-child(4) {
+        width: 100px;
+        }
+
+        .transaction-table th:nth-child(5), 
+        .transaction-table td:nth-child(5) {
+        width: 80px;
+        }
+
+        .transaction-table th:nth-child(6), 
+        .transaction-table td:nth-child(6) {
+        width: 100px;
+        }
+
+        .transaction-table th:nth-child(7), 
+        .transaction-table td:nth-child(7) {
+        width: 200px;
+        }
+
+        /* 美化捲軸樣式 (現代瀏覽器) */
+        .table-container::-webkit-scrollbar {
+        height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+        }
+        .fixed-width-container {
+            max-height: 735px;  /* 確保不超出父容器 */
+            width: 100%;      /* 占滿可用空間 */
+            overflow-x: auto; /* 當內容溢出時顯示水平捲軸 */
         }
     </style>
 </head>
@@ -356,7 +434,7 @@
             <!-- Right panel - Transaction Table -->
             <div class="col-md-6">
                 <div class="card">
-                    <div class="card-body">
+                    <!-- <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="card-title">交易監控</h5>
                             <div class="text-muted small">風險規則將套用於此表格中的交易</div>
@@ -376,7 +454,35 @@
                                     </tr>
                                 </thead>
                                 <tbody id="transaction-table">
-                                    <!-- Transactions will be dynamically generated -->
+                                     Transactions will be dynamically generated
+                                 </tbody>
+                            </table>
+                        </div>
+                    </div> --> 
+
+                    <!-- 修改後的表格HTML結構 -->
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title">交易監控</h5>
+                            <div class="text-muted small">風險規則將套用於此表格中的交易</div>
+                        </div>
+                        
+                        <!-- 添加table-container包裹層，設定固定寬度和捲軸 -->
+                        <div class="table-responsive fixed-width-container">
+                            <table class="table transaction-table">
+                                <thead>
+                                    <tr>
+                                        <th>狀態</th>
+                                        <th>卡號</th>
+                                        <th>時間</th>
+                                        <th>國家</th>
+                                        <th class="text-end">金額</th>
+                                        <th class="text-end">設備風險</th>
+                                        <th>命中規則</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transaction-table">
+                                    <!-- 交易記錄會動態生成到這裡 -->
                                 </tbody>
                             </table>
                         </div>
@@ -409,7 +515,7 @@
     <script>
         // 國家代碼對照表
         const countryMap = {
-            '344': '香港',
+            '344': '中國',
             '408': '朝鮮',
             '702': '新加坡',
             '804': '烏克蘭',
@@ -428,13 +534,185 @@
             '484': '墨西哥',
             '643': '俄羅斯',
             '764': '泰國',
-            '704': '越南'
+            '704': '越南',
+            // 新增国家
+            '158': '臺灣',  // 添加台湾
+            '496': '蒙古',
+            '764': '泰國',
+            '608': '菲律賓',
+            '418': '寮國',
+            '104': '緬甸',
+            '116': '柬埔寨',
+            '096': '汶萊',
+            '398': '哈薩克',
+            '795': '土庫曼',
+            '860': '烏茲別克',
+            '762': '塔吉克',
+            '417': '吉爾吉斯',
+            '051': '亞美尼亞',
+            '031': '亞塞拜然',
+            '268': '喬治亞',
+            '368': '伊拉克',
+            '364': '伊朗',
+            '682': '沙烏地阿拉伯',
+            '784': '阿拉伯聯合大公國',
+            '634': '卡達',
+            '414': '科威特',
+            '512': '阿曼',
+            '887': '葉門',
+            '760': '敘利亞',
+            '422': '黎巴嫩',
+            '400': '約旦',
+            '376': '以色列',
+            '586': '巴基斯坦',
+            '004': '阿富汗',
+            '050': '孟加拉',
+            '144': '斯里蘭卡',
+            '524': '尼泊爾',
+            '064': '不丹',
+            '462': '馬爾地夫',
+            '203': '捷克',
+            '348': '匈牙利',
+            '616': '波蘭',
+            '040': '奧地利',
+            '380': '義大利',
+            '756': '瑞士',
+            '724': '西班牙',
+            '620': '葡萄牙',
+            '056': '比利時',
+            '528': '荷蘭',
+            '578': '挪威',
+            '752': '瑞典',
+            '246': '芬蘭',
+            '208': '丹麥',
+            '372': '愛爾蘭',
+            '300': '希臘',
+            '642': '羅馬尼亞',
+            '100': '保加利亞',
+            '688': '塞爾維亞',
+            '191': '克羅埃西亞',
+            '705': '斯洛維尼亞',
+            '703': '斯洛伐克',
+            '440': '立陶宛',
+            '428': '拉脫維亞',
+            '233': '愛沙尼亞',
+            '498': '摩爾多瓦',
+            '804': '烏克蘭',
+            '112': '白俄羅斯',
+            '498': '摩爾多瓦',
+            '710': '南非',
+            '404': '肯亞',
+            '231': '衣索比亞',
+            '818': '埃及',
+            '504': '摩洛哥',
+            '788': '突尼西亞',
+            '012': '阿爾及利亞',
+            '288': '迦納',
+            '566': '奈及利亞',
+            '180': '剛果',
+            '024': '安哥拉',
+            '716': '辛巴威',
+            '516': '納米比亞',
+            '072': '波札那',
+            '748': '史瓦濟蘭',
+            '508': '莫三比克',
+            '894': '尚比亞',
+            '834': '坦尚尼亞',
+            '800': '烏干達',
+            '450': '馬達加斯加',
+            '480': '模里西斯',
+            '175': '馬約特',
+            '638': '留尼旺',
+            '732': '西撒哈拉',
+            '466': '馬利',
+            '562': '尼日',
+            '148': '查德',
+            '204': '貝南',
+            '768': '多哥',
+            '270': '甘比亞',
+            '324': '幾內亞',
+            '430': '賴比瑞亞',
+            '384': '象牙海岸',
+            '854': '布吉納法索',
+            '729': '蘇丹',
+            '728': '南蘇丹',
+            '686': '塞內加爾',
+            '478': '茅利塔尼亞',
+            '831': '格瑞那達',
+            '032': '阿根廷',
+            '076': '巴西',
+            '170': '哥倫比亞',
+            '604': '秘魯',
+            '152': '智利',
+            '862': '委內瑞拉',
+            '218': '厄瓜多',
+            '068': '玻利維亞',
+            '600': '巴拉圭',
+            '858': '烏拉圭',
+            '328': '蓋亞那',
+            '740': '蘇利南',
+            '238': '福克蘭群島',
+            '320': '瓜地馬拉',
+            '591': '巴拿馬',
+            '188': '哥斯大黎加',
+            '340': '宏都拉斯',
+            '222': '薩爾瓦多',
+            '558': '尼加拉瓜',
+            '084': '貝里斯',
+            '192': '古巴',
+            '332': '海地',
+            '214': '多明尼加',
+            '388': '牙買加',
+            '052': '巴巴多斯',
+            '028': '安地卡及巴布達',
+            '044': '巴哈馬',
+            '780': '千里達',
+            '010': '南極洲',
+            '744': '亞速爾群島',
+            '312': '瓜德羅普',
+            '474': '馬提尼克',
+            '312': '瓜德羅普',
+            '660': '安圭拉',
+            '254': '法屬圭亞那',
+            '500': '蒙特塞拉特',
+            '654': '聖赫勒拿',
+            '090': '所羅門群島',
+            '548': '萬那杜',
+            '242': '斐濟',
+            '316': '關島',
+            '583': '密克羅尼西亞',
+            '580': '北馬里亞納',
+            '585': '帛琉',
+            '016': '美屬薩摩亞',
+            '882': '薩摩亞',
+            '296': '吉里巴斯',
+            '776': '東加',
+            '184': '庫克群島',
+            '570': '紐埃',
+            '612': '皮特肯群島',
+            '162': '聖誕島',
+            '334': '赫德島和麥克唐納群島',
+            '574': '諾福克島',
+            '520': '瑙魯',
+            '798': '吐瓦魯',
+            '136': '開曼群島',
+            '796': '特克斯和凱科斯群島',
+            '092': '英屬維京群島',
+            '772': '托克勞',
+            '876': '瓦利斯和富圖納',
+            '184': '庫克群島',
+            '258': '法屬波利尼西亞',
+            '540': '新喀里多尼亞',
+            '540': '新喀里多尼亞'
         };
 
-        // 國家代碼與 ECharts 名稱映射 - 擴展適配更多國家
-        const countryEChartsMap = {
+            // 國家代碼與 ECharts 名稱映射 - 擴展適配更多國家
+        // 扩展ECharts国家名称映射
+         const countryEChartsMap = {
+            // 原有映射
             '156': 'China',
             '344': 'China', // 香港作為中國的一部分在ECharts中顯示
+            '158': 'Taiwan', // 添加台湾
             '392': 'Japan',
             '408': 'North Korea',
             '124': 'Canada', 
@@ -443,7 +721,6 @@
             '826': 'United Kingdom',
             '702': 'Singapore',
             '804': 'Ukraine',
-            // 添加更多常見國家映射
             '036': 'Australia',
             '250': 'France',
             '356': 'India',
@@ -453,9 +730,84 @@
             '484': 'Mexico',
             '643': 'Russia',
             '764': 'Thailand',
-            '704': 'Vietnam'
-        };
-        
+            '704': 'Vietnam',
+            // 新增映射 (只添加部分主要国家，剩余的可根据需要再补充)
+            '496': 'Mongolia',
+            '608': 'Philippines',
+            '418': 'Laos',
+            '104': 'Myanmar',
+            '116': 'Cambodia',
+            '096': 'Brunei',
+            '398': 'Kazakhstan',
+            '795': 'Turkmenistan',
+            '860': 'Uzbekistan',
+            '762': 'Tajikistan',
+            '417': 'Kyrgyzstan',
+            '051': 'Armenia',
+            '031': 'Azerbaijan',
+            '268': 'Georgia',
+            '368': 'Iraq',
+            '364': 'Iran',
+            '682': 'Saudi Arabia',
+            '784': 'United Arab Emirates',
+            '634': 'Qatar',
+            '414': 'Kuwait',
+            '512': 'Oman',
+            '887': 'Yemen',
+            '760': 'Syria',
+            '422': 'Lebanon',
+            '400': 'Jordan',
+            '376': 'Israel',
+            '586': 'Pakistan',
+            '004': 'Afghanistan',
+            '050': 'Bangladesh',
+            '144': 'Sri Lanka',
+            '524': 'Nepal',
+            '203': 'Czech Republic',
+            '348': 'Hungary',
+            '616': 'Poland',
+            '040': 'Austria',
+            '380': 'Italy',
+            '756': 'Switzerland',
+            '724': 'Spain',
+            '620': 'Portugal',
+            '056': 'Belgium',
+            '528': 'Netherlands',
+            '578': 'Norway',
+            '752': 'Sweden',
+            '246': 'Finland',
+            '208': 'Denmark',
+            '372': 'Ireland',
+            '300': 'Greece',
+            '642': 'Romania',
+            '100': 'Bulgaria',
+            '191': 'Croatia',
+            '705': 'Slovenia',
+            '440': 'Lithuania',
+            '428': 'Latvia',
+            '233': 'Estonia',
+            '112': 'Belarus',
+            '710': 'South Africa',
+            '404': 'Kenya',
+            '231': 'Ethiopia',
+            '818': 'Egypt',
+            '504': 'Morocco',
+            '788': 'Tunisia',
+            '012': 'Algeria',
+            '288': 'Ghana',
+            '566': 'Nigeria',
+            '032': 'Argentina',
+            '076': 'Brazil',
+            '170': 'Colombia',
+            '604': 'Peru',
+            '152': 'Chile',
+            '862': 'Venezuela',
+            '218': 'Ecuador',
+            '068': 'Bolivia',
+            '600': 'Paraguay',
+            '858': 'Uruguay'
+    };
+
         // 定義所有規則
         const allRules = [
             { id: '1', text: '小金額且設備低風險', level: 'success', description: '交易金額低於500元且來自已知安全設備，可自動通過', 
@@ -538,19 +890,172 @@
         }
         
         // 交易數據
-        const transactions = [
-            { id: 1, card: '05f2c088cf', countryCode: '344', amount: 100, deviceRisk: 0.2, isVerified: true, cumulativeAmount: 300, timestamp: getRandomTime(0, 5) },
-            { id: 2, card: '454653c25', countryCode: '408', amount: 9900, deviceRisk: -0.6, isVerified: false, cumulativeAmount: 9900, timestamp: getRandomTime(1, 2) },
-            { id: 3, card: '8yu723321', countryCode: '840', amount: 20, deviceRisk: 0.9, isVerified: true, cumulativeAmount: 100, timestamp: getRandomTime(20, 30) },
-            { id: 4, card: '745h625g4', countryCode: '702', amount: 700, deviceRisk: 0, isVerified: true, cumulativeAmount: 2800, timestamp: getRandomTime(0, 12) },
-            { id: 5, card: '745h625g5', countryCode: '804', amount: 200, deviceRisk: -0.8, isVerified: false, cumulativeAmount: 800, timestamp: getRandomTime(10, 15) },
-            { id: 6, card: '23662kop6', countryCode: '702', amount: 290, deviceRisk: 0.5, isVerified: true, cumulativeAmount: 1200, timestamp: getRandomTime(36, 48) },
-            { id: 7, card: '782642ds7', countryCode: '344', amount: 800, deviceRisk: 0.3, isVerified: true, cumulativeAmount: 800, timestamp: getRandomTime(2, 4) },
-            // 添加跨國測試案例 - 同一卡號，不同國家，時間接近
-            { id: 8, card: 'crossb0rd3r', countryCode: '156', amount: 450, deviceRisk: 0.1, isVerified: true, cumulativeAmount: 450, timestamp: getRandomTime(0.9, 1) },
-            { id: 9, card: 'crossb0rd3r', countryCode: '392', amount: 380, deviceRisk: 0.2, isVerified: true, cumulativeAmount: 830, timestamp: getRandomTime(0.8, 0.9) }
-        ];
-        
+        // const transactions = [
+        //     { id: 1, card: '05f2c088cf', countryCode: '344', amount: 100, deviceRisk: 0.2, isVerified: true, cumulativeAmount: 300, timestamp: getRandomTime(0, 5) },
+        //     { id: 2, card: '454653c25', countryCode: '408', amount: 9900, deviceRisk: -0.6, isVerified: false, cumulativeAmount: 9900, timestamp: getRandomTime(1, 2) },
+        //     { id: 3, card: '8yu723321', countryCode: '840', amount: 20, deviceRisk: 0.9, isVerified: true, cumulativeAmount: 100, timestamp: getRandomTime(20, 30) },
+        //     { id: 4, card: '745h625g4', countryCode: '702', amount: 700, deviceRisk: 0, isVerified: true, cumulativeAmount: 2800, timestamp: getRandomTime(0, 12) },
+        //     { id: 5, card: '745h625g5', countryCode: '804', amount: 200, deviceRisk: -0.8, isVerified: false, cumulativeAmount: 800, timestamp: getRandomTime(10, 15) },
+        //     { id: 6, card: '23662kop6', countryCode: '702', amount: 290, deviceRisk: 0.5, isVerified: true, cumulativeAmount: 1200, timestamp: getRandomTime(36, 48) },
+        //     { id: 7, card: '782642ds7', countryCode: '344', amount: 800, deviceRisk: 0.3, isVerified: true, cumulativeAmount: 800, timestamp: getRandomTime(2, 4) },
+        //     // 添加跨國測試案例 - 同一卡號，不同國家，時間接近
+        //     { id: 8, card: 'crossb0rd3r', countryCode: '156', amount: 450, deviceRisk: 0.1, isVerified: true, cumulativeAmount: 450, timestamp: getRandomTime(0.9, 1) },
+        //     { id: 9, card: 'crossb0rd3r', countryCode: '392', amount: 380, deviceRisk: 0.2, isVerified: true, cumulativeAmount: 830, timestamp: getRandomTime(0.8, 0.9) }
+        // ];
+        const transactions = generateTransactions(200);
+        function generateTransactions(count) {
+            const transactions = [];
+            const countryCodes = Object.keys(countryMap);
+            
+            // 確保台灣的代碼存在於國家列表中
+            if (!countryCodes.includes('158')) {
+                countryCodes.push('158'); // 添加台灣的ISO代碼
+            }
+            
+            const deviceRiskLevels = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+            const cardPrefixes = ['a23f', 'b47d', 'c91e', 'd85h', 'e62j', 'f74k', 'g38l', 'h59m', 'i26n', 'j70p', 'k14q', 'l83r', 'm05s', 'n67t', 'o29u', 'p48v', 'q71w', 'r35x', 's92y', 't60z'];
+            
+            // 產生一些有跨國交易的卡號
+            const crossBorderCards = [];
+            for (let i = 0; i < 20; i++) {
+                crossBorderCards.push('cross' + Math.random().toString(36).substring(2, 8));
+            }
+            
+            // 確保交易金額有不同級別
+            const amountRanges = [
+                // 小額
+                { min: 10, max: 300 },
+                // 中等
+                { min: 301, max: 800 },
+                // 大額
+                { min: 801, max: 2000 },
+                // 超大額
+                { min: 2001, max: 10000 }
+            ];
+            
+            // 生成交易
+            for (let i = 0; i < count; i++) {
+                const isCrossBorder = Math.random() < 0.15; // 15%的跨國交易
+                let card;
+                
+                if (isCrossBorder) {
+                    // 使用跨國卡號
+                    card = crossBorderCards[Math.floor(Math.random() * crossBorderCards.length)];
+                } else {
+                    // 生成普通卡號
+                    const prefix = cardPrefixes[Math.floor(Math.random() * cardPrefixes.length)];
+                    const suffix = Math.random().toString(36).substring(2, 7);
+                    card = prefix + suffix;
+                }
+                
+                // 選擇金額範圍
+                const amountRange = amountRanges[Math.floor(Math.random() * amountRanges.length)];
+                const amount = Math.floor(Math.random() * (amountRange.max - amountRange.min + 1)) + amountRange.min;
+                
+                // 選擇國家 (確保台灣有一定比例)
+                let countryCode;
+                if (Math.random() < 0.1) { // 10%的機率選擇台灣
+                    countryCode = '158'; // 台灣
+                } else {
+                    countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                }
+                
+                // 設備風險
+                const deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
+                
+                // 驗證狀態 (75% 已驗證)
+                const isVerified = Math.random() < 0.75;
+                
+                // 累積金額 (根據卡號模擬一些累積)
+                let cumulativeAmount = amount;
+                if (Math.random() < 0.4) {
+                    cumulativeAmount += Math.floor(Math.random() * 3000);
+                }
+                
+                // 時間 (分布在過去48小時內)
+                const timestamp = getRandomTime(0, 48);
+                
+                // 創建交易對象
+                const transaction = {
+                    id: i + 1,
+                    card: card,
+                    countryCode: countryCode,
+                    amount: amount,
+                    deviceRisk: deviceRisk,
+                    isVerified: isVerified,
+                    cumulativeAmount: cumulativeAmount,
+                    timestamp: timestamp
+                };
+                
+                transactions.push(transaction);
+            }
+            
+            // 為跨國交易卡添加同一時間段內的多國交易
+            for (const crossCard of crossBorderCards) {
+                // 檢查該卡是否已有交易
+                const cardTransactions = transactions.filter(tx => tx.card === crossCard);
+                
+                if (cardTransactions.length > 0) {
+                    // 從該卡的第一筆交易獲取基礎信息
+                    const baseTx = cardTransactions[0];
+                    
+                    // 在1小時內添加一筆不同國家的交易
+                    const baseTime = new Date(baseTx.timestamp);
+                    const newTime = new Date(baseTime.getTime() + Math.random() * 55 * 60 * 1000); // 55分鐘內
+                    
+                    // 找一個不同的國家 (增加台灣的機率)
+                    let newCountryCode;
+                    if (baseTx.countryCode !== '158' && Math.random() < 0.2) {
+                        newCountryCode = '158'; // 台灣
+                    } else {
+                        do {
+                            newCountryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                        } while (newCountryCode === baseTx.countryCode);
+                    }
+                    
+                    // 添加新交易
+                    transactions.push({
+                        id: transactions.length + 1,
+                        card: crossCard,
+                        countryCode: newCountryCode,
+                        amount: Math.floor(Math.random() * 1000) + 100,
+                        deviceRisk: baseTx.deviceRisk,
+                        isVerified: baseTx.isVerified,
+                        cumulativeAmount: baseTx.cumulativeAmount + Math.floor(Math.random() * 500),
+                        timestamp: newTime
+                    });
+                }
+            }
+            
+            // 確保至少有一些台灣的交易記錄
+            const taiwanTxCount = transactions.filter(tx => tx.countryCode === '158').length;
+            if (taiwanTxCount < 5) {
+                // 添加幾筆台灣交易
+                const additionalCount = 5 - taiwanTxCount;
+                for (let i = 0; i < additionalCount; i++) {
+                    const prefix = cardPrefixes[Math.floor(Math.random() * cardPrefixes.length)];
+                    const suffix = Math.random().toString(36).substring(2, 7);
+                    const card = prefix + suffix;
+                    
+                    const amountRange = amountRanges[Math.floor(Math.random() * amountRanges.length)];
+                    const amount = Math.floor(Math.random() * (amountRange.max - amountRange.min + 1)) + amountRange.min;
+                    
+                    transactions.push({
+                        id: transactions.length + 1,
+                        card: card,
+                        countryCode: '158', // 台灣
+                        amount: amount,
+                        deviceRisk: deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)],
+                        isVerified: Math.random() < 0.75,
+                        cumulativeAmount: amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0),
+                        timestamp: getRandomTime(0, 48)
+                    });
+                }
+            }
+            
+            return transactions;
+        }
+
         // DOM元素
         var executionZone, availableRules, placeholder, dropIndicator, defaultBtn, customBtn, transactionTable, logPanel;
         
