@@ -1,4 +1,4 @@
-body {
+.bkgd {
     background-color: #f0f2f5;
     min-height: 100vh;
     padding: 20px;
@@ -31,8 +31,8 @@ body {
     cursor: move;
     position: relative;
     transition: all 0.2s;
-    width: 100%; /* Ensure it takes full width */
-    min-width: 250px; /* Minimum width to fit content */
+    width: 100%;
+    min-width: 250px;
 }
 
 .rule-item:hover {
@@ -116,15 +116,15 @@ body {
 
 .drop-zone {
     min-height: 150px;
-    max-height: 300px; /* 添加最大高度 */
-    height: 300px; /* 固定高度 */
+    max-height: 300px;
+    height: 300px;
     border: 2px dashed #d9d9d9;
     border-radius: 4px;
     background-color: #fafafa;
     padding: 15px;
     margin-bottom: 15px;
     width: 100%;
-    overflow-y: auto; /* 添加垂直捲軸 */
+    overflow-y: auto;
 }
 
 .drop-zone-placeholder {
@@ -152,10 +152,10 @@ body {
     border-left: 4px solid #1890ff;
 }
 
-.transaction-table th {
-    background-color: #001529;
-    color: white;
-    border: none;
+.transaction-table thead th {
+    background-color: #001529 !important;
+    color: white !important;
+    border: none !important;
 }
 
 .transaction-table tbody tr:nth-child(odd) {
@@ -209,13 +209,11 @@ tr.highlighted {
     overflow-y: auto;
 }
 
-/* Fixed width for rule panels */
 .rules-panel {
     width: 100%;
     min-width: 250px;
 }
 
-/* Rule number styling */
 .rule-number {
     display: inline-flex;
     min-width: 22px;
@@ -232,8 +230,7 @@ tr.highlighted {
     padding: 0 4px;
 }
 
-/* 地圖相關樣式 */
-#world-map {
+#world-map, #hourly-risk-chart, #risk-pie-chart {
     height: 400px;
     width: 100%;
     background-color: #f9f9f9;
@@ -255,79 +252,65 @@ tr.highlighted {
     font-size: 12px;
 }
 
-/* 添加以下 CSS 樣式到您的樣式表中 */
-
-/* 限制表格容器的最大寬度 */
 .table-container {
-max-width: 100%;
-overflow-x: auto;
-/* 為捲軸添加一些內距，避免內容太靠近底部 */
-padding-bottom: 5px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: 5px;
 }
 
-/* 確保表格內容不會被壓縮 */
 .transaction-table {
-width: 100%;
-/* 設定表格的最小寬度，確保內容不會被壓縮 */
-min-width: 750px;
+    width: 100%;
+    min-width: 750px;
 }
 
-/* 定義各列的固定寬度 */
-.transaction-table th:nth-child(1), 
-.transaction-table td:nth-child(1) {
-width: 60px;
+.transaction-table th:nth-child(1), .transaction-table td:nth-child(1) {
+    width: 60px;
 }
 
-.transaction-table th:nth-child(2), 
-.transaction-table td:nth-child(2) {
-width: 120px;
+.transaction-table th:nth-child(2), .transaction-table td:nth-child(2) {
+    width: 120px;
 }
 
-.transaction-table th:nth-child(3), 
-.transaction-table td:nth-child(3) {
-width: 150px;
+.transaction-table th:nth-child(3), .transaction-table td:nth-child(3) {
+    width: 150px;
 }
 
-.transaction-table th:nth-child(4), 
-.transaction-table td:nth-child(4) {
-width: 100px;
+.transaction-table th:nth-child(4), .transaction-table td:nth-child(4) {
+    width: 100px;
 }
 
-.transaction-table th:nth-child(5), 
-.transaction-table td:nth-child(5) {
-width: 80px;
+.transaction-table th:nth-child(5), .transaction-table td:nth-child(5) {
+    width: 80px;
 }
 
-.transaction-table th:nth-child(6), 
-.transaction-table td:nth-child(6) {
-width: 100px;
+.transaction-table th:nth-child(6), .transaction-table td:nth-child(6) {
+    width: 100px;
 }
 
-.transaction-table th:nth-child(7), 
-.transaction-table td:nth-child(7) {
-width: 200px;
+.transaction-table th:nth-child(7), .transaction-table td:nth-child(7) {
+    width: 200px;
 }
 
-/* 美化捲軸樣式 (現代瀏覽器) */
 .table-container::-webkit-scrollbar {
-height: 8px;
+    height: 8px;
 }
 
 .table-container::-webkit-scrollbar-track {
-background: #f1f1f1;
-border-radius: 4px;
+    background: #f1f1f1;
+    border-radius: 4px;
 }
 
 .table-container::-webkit-scrollbar-thumb {
-background: #c1c1c1;
-border-radius: 4px;
+    background: #c1c1c1;
+    border-radius: 4px;
 }
 
 .table-container::-webkit-scrollbar-thumb:hover {
-background: #a8a8a8;
+    background: #a8a8a8;
 }
+
 .fixed-width-container {
     max-height: 735px;
-    width: 100%;     
+    width: 100%;
     overflow-x: auto;
 }

@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
 </head>
-<body>
+<body class="bkgd">
     <div class="container-fluid">
         <div class="title-area">
             <h2>風險規則引擎沙盒</h2>
@@ -178,12 +178,12 @@
                 return (now - txTime) / (1000 * 60 * 60) <= 24;
             },
 
-            hasMultipleCountriesIn60Min(tx, transactions) {
+            hasMultipleCountriesIn15Min(tx, transactions) {
                 const txTime = new Date(tx.timestamp);
                 const countries = new Set(
                     transactions
                         .filter(t => t.card === tx.card)
-                        .filter(t => Math.abs((txTime - new Date(t.timestamp)) / (1000 * 60)) <= 60)
+                        .filter(t => Math.abs((txTime - new Date(t.timestamp)) / (1000 * 60)) <= 15)
                         .map(t => t.countryCode)
                 );
                 return countries.size > 1;
@@ -204,6 +204,14 @@
             clearLog() {
                 const logPanel = document.getElementById('log-panel');
                 if (logPanel) logPanel.innerHTML = '';
+            },
+
+            shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
             }
         };
 
@@ -282,8 +290,8 @@
                   condition: tx => tx.amount > 500 && ['408', '804'].includes(tx.countryCode), action: 'BLOCK' },
                 { id: '6', text: '設備高風險', level: 'danger', description: '設備風險評分為負數，可能表示有異常活動',
                   condition: tx => tx.deviceRisk < 0, action: 'BLOCK' },
-                { id: '7', text: '短時間內來自不同國家', level: 'danger', description: '同一卡號在60分鐘內從不同國家發起交易',
-                  condition: tx => Utils.hasMultipleCountriesIn60Min(tx, TransactionManager.transactions), action: 'BLOCK' }
+                { id: '7', text: '15分鐘內來自不同國家', level: 'danger', description: '同一卡號在15分鐘內從不同國家發起交易',
+                  condition: tx => Utils.hasMultipleCountriesIn15Min(tx, TransactionManager.transactions), action: 'BLOCK' }
             ],
 
             defaultRuleIds: ['7', '5', '6', '4', '3']
@@ -320,7 +328,7 @@
 
                     const amountRange = amountRanges[Math.floor(Math.random() * amountRanges.length)];
                     const amount = Math.floor(Math.random() * (amountRange.max - amountRange.min + 1)) + amountRange.min;
-                    const countryCode = Math.random() < 0.05 ? '158' : countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                    const countryCode = Math.random() < 0.05 ? '158' : Utils.shuffleArray([...countryCodes])[Math.floor(Math.random() * countryCodes.length)];
                     const deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
                     const isVerified = Math.random() < 0.75;
                     const cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
@@ -343,9 +351,10 @@
                     if (cardTxs.length) {
                         const baseTx = cardTxs[0];
                         const newTime = new Date(new Date(baseTx.timestamp).getTime() + Math.random() * 55 * 60 * 1000);
+                        const availableCountries = Utils.shuffleArray(countryCodes.filter(c => c !== baseTx.countryCode));
                         const newCountryCode = baseTx.countryCode !== '158' && Math.random() < 0.2
                             ? '158'
-                            : countryCodes.find(c => c !== baseTx.countryCode) || countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                            : availableCountries[Math.floor(Math.random() * availableCountries.length)] || countryCodes[Math.floor(Math.random() * countryCodes.length)];
 
                         this.transactions.push({
                             id: this.transactions.length + 1,
@@ -388,6 +397,12 @@
                     countryStats.set(tx.countryCode, (countryStats.get(tx.countryCode) || 0) + 1);
                 });
                 Utils.addLog(`交易生成完成：共 ${this.transactions.length} 筆，涵蓋 ${countryStats.size} 個國家`);
+                const topCountries = Array.from(countryStats.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([code, count]) => `${Data.countryMap[code] || code}: ${count} 筆`)
+                    .join(', ');
+                Utils.addLog(`交易最多的前5個國家: ${topCountries}`);
 
                 this.transactions.forEach(tx => {
                     if (tx.card.length !== 16) {
@@ -685,7 +700,22 @@
                     return;
                 }
 
-                TransactionManager.transactions.forEach(tx => this.processTransaction(tx, activeRules, riskLevel));
+                const rule7Hits = new Map();
+                TransactionManager.transactions.forEach(tx => {
+                    const result = this.processTransaction(tx, activeRules, riskLevel);
+                    if (result.matchedRule?.id === '7') {
+                        rule7Hits.set(tx.countryCode, (rule7Hits.get(tx.countryCode) || 0) + 1);
+                    }
+                });
+
+                // 記錄規則 #7 命中分佈
+                const rule7Log = Array.from(rule7Hits.entries())
+                    .map(([code, count]) => `${Data.countryMap[code] || code}: ${count} 筆`)
+                    .join(', ');
+                if (rule7Log) {
+                    Utils.addLog(`規則 #7 命中分佈: ${rule7Log}`);
+                }
+
                 ChartManager.updateAll();
             },
 
@@ -701,14 +731,14 @@
                         matchedRule = rule;
                         action = rule.action;
                         hitRuleCell.innerHTML = `<span class="badge bg-light text-dark">#${rule.id}</span> ${rule.text}`;
-                        Utils.addLog(`交易 ${tx.card} 命中規則 #${rule.id}: ${rule.text}`);
+                        Utils.addLog(`交易 ${tx.card} (${Data.countryMap[tx.countryCode] || tx.countryCode}) 命中規則 #${rule.id}: ${rule.text}`);
                         break;
                     }
                 }
 
                 if (!matchedRule) {
                     hitRuleCell.textContent = '未命中任何規則';
-                    Utils.addLog(`交易 ${tx.card} 未命中任何規則，採用${riskLevel}風險預設行為`);
+                    Utils.addLog(`交易 ${tx.card} (${Data.countryMap[tx.countryCode] || tx.countryCode}) 未命中任何規則，採用${riskLevel}風險預設行為`);
                 }
 
                 statusCell.innerHTML = `
@@ -719,6 +749,8 @@
                     }"></i>
                 `;
                 row.classList.add('highlighted');
+
+                return { action, matchedRule };
             },
 
             getDefaultAction(riskLevel) {
@@ -798,6 +830,7 @@
                 try {
                     const countryCounts = new Map();
                     const highRiskCounts = new Map();
+                    const rule7Counts = new Map();
 
                     document.querySelectorAll('#transaction-table tr').forEach(row => {
                         const txId = row.getAttribute('data-id');
@@ -805,15 +838,34 @@
                         if (!tx) return;
 
                         const isHighRisk = row.querySelector('td:first-child i')?.classList.contains('text-danger');
+                        const hitRule = row.querySelector('td:last-child span')?.textContent || '';
                         countryCounts.set(tx.countryCode, (countryCounts.get(tx.countryCode) || 0) + 1);
-                        if (isHighRisk) highRiskCounts.set(tx.countryCode, (highRiskCounts.get(tx.countryCode) || 0) + 1);
+                        if (isHighRisk) {
+                            highRiskCounts.set(tx.countryCode, (highRiskCounts.get(tx.countryCode) || 0) + 1);
+                            if (hitRule.includes('#7')) {
+                                rule7Counts.set(tx.countryCode, (rule7Counts.get(tx.countryCode) || 0) + 1);
+                            }
+                        }
                     });
+
+                    // 記錄高風險交易和規則 #7 命中分佈
+                    const highRiskLog = Array.from(highRiskCounts.entries())
+                        .map(([code, count]) => `${Data.countryMap[code] || code}: ${count} 筆`)
+                        .join(', ');
+                    const rule7Log = Array.from(rule7Counts.entries())
+                        .map(([code, count]) => `${Data.countryMap[code] || code}: ${count} 筆`)
+                        .join(', ');
+                    Utils.addLog(`高風險交易分佈: ${highRiskLog}`);
+                    if (rule7Log) {
+                        Utils.addLog(`規則 #7 命中分佈: ${rule7Log}`);
+                    }
 
                     const mapData = Array.from(countryCounts.entries()).map(([code, total]) => ({
                         name: Data.countryEChartsMap[code] || Data.countryMap[code] || code,
                         value: highRiskCounts.get(code) || 0,
                         totalCount: total,
                         highRiskCount: highRiskCounts.get(code) || 0,
+                        rule7Count: rule7Counts.get(code) || 0,
                         highRiskPercentage: total ? Math.round(((highRiskCounts.get(code) || 0) / total) * 100) : 0,
                         originalCode: code
                     }));
@@ -827,13 +879,14 @@
                                 ? `${Data.countryMap[params.data.originalCode] || params.data.originalCode}<br/>
                                    總交易數量: ${params.data.totalCount} 筆<br/>
                                    高風險交易: ${params.data.highRiskCount} 筆<br/>
+                                   規則 #7 命中: ${params.data.rule7Count} 筆<br/>
                                    高風險比例: ${params.data.highRiskPercentage}%`
                                 : params.name
                         },
                         visualMap: {
                             show: true,
                             min: 0,
-                            max: Math.max(...Array.from(highRiskCounts.values()), 1),
+                            max: Math.max(...Array.from(highRiskCounts.values()), 1) * 1.5, // 進一步平滑顏色分佈
                             calculable: true,
                             inRange: { color: ['#fee2e2', '#ef4444'] },
                             text: ['高風險交易多', '高風險交易少'],
