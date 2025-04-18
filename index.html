@@ -4,347 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>風險規則引擎沙盒</title>
+    <link rel="stylesheet" type="text/css" href="./style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-    <!-- 使用最新版的 ECharts 並載入世界地圖 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
-    <script src="https://echarts.apache.org/examples/data/asset/geo/world.json"></script>
-    <style>
-        body {
-            background-color: #f0f2f5;
-            min-height: 100vh;
-            padding: 20px;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
-        }
-        
-        .container-fluid {
-            padding: 0 30px;
-        }
-        
-        .title-area {
-            color: #333;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .card {
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border: none;
-            margin-bottom: 20px;
-            background-color: #fff;
-            height: calc(100% - 20px);
-        }
-        
-        .rule-item {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 6px;
-            cursor: move;
-            position: relative;
-            transition: all 0.2s;
-            width: 100%; /* Ensure it takes full width */
-            min-width: 250px; /* Minimum width to fit content */
-        }
-        
-        .rule-item:hover {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .rule-item.success {
-            border-left: 4px solid #10b981;
-            background-color: #ecfdf5;
-        }
-        
-        .rule-item.warning {
-            border-left: 4px solid #f59e0b;
-            background-color: #fffbeb;
-        }
-        
-        .rule-item.danger {
-            border-left: 4px solid #ef4444;
-            background-color: #fef2f2;
-        }
-        
-        .rule-icon {
-            display: inline-flex;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            justify-content: center;
-            align-items: center;
-            margin-right: 10px;
-            flex-shrink: 0;
-        }
-        
-        .rule-icon.success {
-            background-color: #10b981;
-            color: white;
-        }
-        
-        .rule-icon.warning {
-            background-color: #f59e0b;
-            color: white;
-        }
-        
-        .rule-icon.danger {
-            background-color: #ef4444;
-            color: white;
-        }
-        
-        .rule-actions {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: none;
-        }
-        
-        .rule-item:hover .rule-actions {
-            display: flex;
-        }
-        
-        .rule-actions button, .btn-action {
-            border: none;
-            background: none;
-            padding: 4px;
-            margin-left: 4px;
-            color: #6b7280;
-            font-size: 14px;
-            cursor: pointer;
-        }
-        
-        .rule-actions button:hover, .btn-action:hover {
-            color: #1890ff;
-        }
-        
-        .rule-actions .fa-times:hover {
-            color: #f5222d;
-        }
-        
-        .handle {
-            cursor: grab;
-        }
-        
-        .drop-zone {
-            min-height: 150px;
-            max-height: 300px; /* 添加最大高度 */
-            height: 300px; /* 固定高度 */
-            border: 2px dashed #d9d9d9;
-            border-radius: 4px;
-            background-color: #fafafa;
-            padding: 15px;
-            margin-bottom: 15px;
-            width: 100%;
-            overflow-y: auto; /* 添加垂直捲軸 */
-        }
-        
-        .drop-zone-placeholder {
-            color: #999;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .drop-indicator {
-            height: 2px;
-            background-color: #1890ff;
-            margin: 5px 0;
-            display: none;
-        }
-        
-        .drop-indicator.active {
-            display: block;
-        }
-        
-        .description-area {
-            min-height: 80px;
-            padding: 15px;
-            background-color: #fafafa;
-            border-radius: 4px;
-            border-left: 4px solid #1890ff;
-        }
-        
-        .transaction-table th {
-            background-color: #001529;
-            color: white;
-            border: none;
-        }
-        
-        .transaction-table tbody tr:nth-child(odd) {
-            background-color: #f5f5f5;
-        }
-        
-        .transaction-table tbody tr:hover {
-            background-color: #e6f7ff;
-        }
-        
-        .risk-badge {
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .risk-badge.success {
-            background-color: #f6ffed;
-            color: #52c41a;
-        }
-        
-        .risk-badge.warning {
-            background-color: #fffbe6;
-            color: #faad14;
-        }
-        
-        .risk-badge.danger {
-            background-color: #fff1f0;
-            color: #f5222d;
-        }
-        
-        tr.highlighted {
-            background-color: #e6f7ff !important;
-        }
-        
-        .log-panel {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #f5f5f5;
-            border-radius: 4px;
-            max-height: 120px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 12px;
-            min-height: 120px;
-        }
-        
-        .available-rules-card {
-            max-height: 450px;
-            overflow-y: auto;
-        }
-        
-        /* Fixed width for rule panels */
-        .rules-panel {
-            width: 100%;
-            min-width: 250px;
-        }
-        
-        /* Rule number styling */
-        .rule-number {
-            display: inline-flex;
-            min-width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            justify-content: center;
-            align-items: center;
-            margin-right: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            background-color: #e6e6e6;
-            color: #333;
-            flex-shrink: 0;
-            padding: 0 4px;
-        }
-
-        /* 地圖相關樣式 */
-        #world-map {
-            height: 400px;
-            width: 100%;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-        }
-        
-        .map-controls {
-            margin-bottom: 10px;
-        }
-        
-        .map-legend {
-            padding: 8px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 4px;
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            z-index: 100;
-            font-size: 12px;
-        }
-
-        /* 添加以下 CSS 樣式到您的樣式表中 */
-
-        /* 限制表格容器的最大寬度 */
-        .table-container {
-        max-width: 100%;
-        overflow-x: auto;
-        /* 為捲軸添加一些內距，避免內容太靠近底部 */
-        padding-bottom: 5px;
-        }
-
-        /* 確保表格內容不會被壓縮 */
-        .transaction-table {
-        width: 100%;
-        /* 設定表格的最小寬度，確保內容不會被壓縮 */
-        min-width: 750px;
-        }
-
-        /* 定義各列的固定寬度 */
-        .transaction-table th:nth-child(1), 
-        .transaction-table td:nth-child(1) {
-        width: 60px;
-        }
-
-        .transaction-table th:nth-child(2), 
-        .transaction-table td:nth-child(2) {
-        width: 120px;
-        }
-
-        .transaction-table th:nth-child(3), 
-        .transaction-table td:nth-child(3) {
-        width: 150px;
-        }
-
-        .transaction-table th:nth-child(4), 
-        .transaction-table td:nth-child(4) {
-        width: 100px;
-        }
-
-        .transaction-table th:nth-child(5), 
-        .transaction-table td:nth-child(5) {
-        width: 80px;
-        }
-
-        .transaction-table th:nth-child(6), 
-        .transaction-table td:nth-child(6) {
-        width: 100px;
-        }
-
-        .transaction-table th:nth-child(7), 
-        .transaction-table td:nth-child(7) {
-        width: 200px;
-        }
-
-        /* 美化捲軸樣式 (現代瀏覽器) */
-        .table-container::-webkit-scrollbar {
-        height: 8px;
-        }
-
-        .table-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 4px;
-        }
-
-        .table-container::-webkit-scrollbar-thumb {
-        background: #c1c1c1;
-        border-radius: 4px;
-        }
-
-        .table-container::-webkit-scrollbar-thumb:hover {
-        background: #a8a8a8;
-        }
-        .fixed-width-container {
-            max-height: 735px;  /* 確保不超出父容器 */
-            width: 100%;      /* 占滿可用空間 */
-            overflow-x: auto; /* 當內容溢出時顯示水平捲軸 */
-        }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script> 
 </head>
 <body>
     <div class="container-fluid">
@@ -434,40 +98,12 @@
             <!-- Right panel - Transaction Table -->
             <div class="col-md-6">
                 <div class="card">
-                    <!-- <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="card-title">交易監控</h5>
-                            <div class="text-muted small">風險規則將套用於此表格中的交易</div>
-                        </div>
-                        
-                        <div class="table-responsive">
-                            <table class="table transaction-table">
-                                <thead>
-                                    <tr>
-                                        <th>狀態</th>
-                                        <th>卡號</th>
-                                        <th>時間</th>
-                                        <th>國家</th>
-                                        <th class="text-end">金額</th>
-                                        <th class="text-end">設備風險</th>
-                                        <th>命中規則</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="transaction-table">
-                                     Transactions will be dynamically generated
-                                 </tbody>
-                            </table>
-                        </div>
-                    </div> --> 
-
-                    <!-- 修改後的表格HTML結構 -->
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="card-title">交易監控</h5>
                             <div class="text-muted small">風險規則將套用於此表格中的交易</div>
                         </div>
                         
-                        <!-- 添加table-container包裹層，設定固定寬度和捲軸 -->
                         <div class="table-responsive fixed-width-container">
                             <table class="table transaction-table">
                                 <thead>
@@ -482,7 +118,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="transaction-table">
-                                    <!-- 交易記錄會動態生成到這裡 -->
+                                    <!-- 交易記錄動態生成 -->
                                 </tbody>
                             </table>
                         </div>
@@ -497,18 +133,13 @@
                         <h5 class="card-title">交易地區分佈</h5>
                         <div class="text-muted small">各國家/地區交易數量</div>
                     </div>
-                    
-                    <!-- 地圖控制項 -->
-                    <div class="map-controls d-flex justify-content-end mb-2">
-                        <button id="zoom-reset" class="btn btn-sm btn-outline-secondary me-2">
-                            <i class="fas fa-sync-alt"></i> 重置視圖
-                        </button>
-                    </div>
-                    
                     <!-- 地圖容器 -->
                     <div id="world-map" style="height: 400px; width: 100%;"></div>
                 </div>
             </div>
+        </div>
+        <div class="row">
+            
         </div>
     </div>
     
@@ -518,7 +149,6 @@
             '344': '中國',
             '408': '朝鮮',
             '702': '新加坡',
-            '804': '烏克蘭',
             '840': '美國',
             '156': '中國',
             '392': '日本',
@@ -535,10 +165,8 @@
             '643': '俄羅斯',
             '764': '泰國',
             '704': '越南',
-            // 新增国家
-            '158': '臺灣',  // 添加台湾
+            '158': '臺灣',  
             '496': '蒙古',
-            '764': '泰國',
             '608': '菲律賓',
             '418': '寮國',
             '104': '緬甸',
@@ -599,7 +227,6 @@
             '498': '摩爾多瓦',
             '804': '烏克蘭',
             '112': '白俄羅斯',
-            '498': '摩爾多瓦',
             '710': '南非',
             '404': '肯亞',
             '231': '衣索比亞',
@@ -669,7 +296,6 @@
             '780': '千里達',
             '010': '南極洲',
             '744': '亞速爾群島',
-            '312': '瓜德羅普',
             '474': '馬提尼克',
             '312': '瓜德羅普',
             '660': '安圭拉',
@@ -687,7 +313,6 @@
             '882': '薩摩亞',
             '296': '吉里巴斯',
             '776': '東加',
-            '184': '庫克群島',
             '570': '紐埃',
             '612': '皮特肯群島',
             '162': '聖誕島',
@@ -702,12 +327,10 @@
             '876': '瓦利斯和富圖納',
             '184': '庫克群島',
             '258': '法屬波利尼西亞',
-            '540': '新喀里多尼亞',
             '540': '新喀里多尼亞'
         };
 
-            // 國家代碼與 ECharts 名稱映射 - 擴展適配更多國家
-        // 扩展ECharts国家名称映射
+         // 國家代碼與 ECharts 名稱映射 - 擴展適配更多國家
          const countryEChartsMap = {
             // 原有映射
             '156': 'China',
@@ -731,7 +354,6 @@
             '643': 'Russia',
             '764': 'Thailand',
             '704': 'Vietnam',
-            // 新增映射 (只添加部分主要国家，剩余的可根据需要再补充)
             '496': 'Mongolia',
             '608': 'Philippines',
             '418': 'Laos',
@@ -890,19 +512,8 @@
         }
         
         // 交易數據
-        // const transactions = [
-        //     { id: 1, card: '05f2c088cf', countryCode: '344', amount: 100, deviceRisk: 0.2, isVerified: true, cumulativeAmount: 300, timestamp: getRandomTime(0, 5) },
-        //     { id: 2, card: '454653c25', countryCode: '408', amount: 9900, deviceRisk: -0.6, isVerified: false, cumulativeAmount: 9900, timestamp: getRandomTime(1, 2) },
-        //     { id: 3, card: '8yu723321', countryCode: '840', amount: 20, deviceRisk: 0.9, isVerified: true, cumulativeAmount: 100, timestamp: getRandomTime(20, 30) },
-        //     { id: 4, card: '745h625g4', countryCode: '702', amount: 700, deviceRisk: 0, isVerified: true, cumulativeAmount: 2800, timestamp: getRandomTime(0, 12) },
-        //     { id: 5, card: '745h625g5', countryCode: '804', amount: 200, deviceRisk: -0.8, isVerified: false, cumulativeAmount: 800, timestamp: getRandomTime(10, 15) },
-        //     { id: 6, card: '23662kop6', countryCode: '702', amount: 290, deviceRisk: 0.5, isVerified: true, cumulativeAmount: 1200, timestamp: getRandomTime(36, 48) },
-        //     { id: 7, card: '782642ds7', countryCode: '344', amount: 800, deviceRisk: 0.3, isVerified: true, cumulativeAmount: 800, timestamp: getRandomTime(2, 4) },
-        //     // 添加跨國測試案例 - 同一卡號，不同國家，時間接近
-        //     { id: 8, card: 'crossb0rd3r', countryCode: '156', amount: 450, deviceRisk: 0.1, isVerified: true, cumulativeAmount: 450, timestamp: getRandomTime(0.9, 1) },
-        //     { id: 9, card: 'crossb0rd3r', countryCode: '392', amount: 380, deviceRisk: 0.2, isVerified: true, cumulativeAmount: 830, timestamp: getRandomTime(0.8, 0.9) }
-        // ];
         const transactions = generateTransactions(200);
+
         function generateTransactions(count) {
             const transactions = [];
             const countryCodes = Object.keys(countryMap);
@@ -913,23 +524,23 @@
             }
             
             const deviceRiskLevels = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
-            const cardPrefixes = ['a23f', 'b47d', 'c91e', 'd85h', 'e62j', 'f74k', 'g38l', 'h59m', 'i26n', 'j70p', 'k14q', 'l83r', 'm05s', 'n67t', 'o29u', 'p48v', 'q71w', 'r35x', 's92y', 't60z'];
+            
+            // 定義常見的銀行卡前綴
+            const bankCardPrefixes = ['4', '5', '3', '6']; // 模擬 Visa, Mastercard, Amex, UnionPay 等
             
             // 產生一些有跨國交易的卡號
             const crossBorderCards = [];
             for (let i = 0; i < 20; i++) {
-                crossBorderCards.push('cross' + Math.random().toString(36).substring(2, 8));
+                const prefix = bankCardPrefixes[Math.floor(Math.random() * bankCardPrefixes.length)];
+                const randomDigits = Math.floor(100000000000000 + Math.random() * 900000000000000).toString().padStart(15, '0'); // 生成15位隨機數字
+                crossBorderCards.push(prefix + randomDigits); // 例如 4477578712345678
             }
             
             // 確保交易金額有不同級別
             const amountRanges = [
-                // 小額
                 { min: 10, max: 300 },
-                // 中等
                 { min: 301, max: 800 },
-                // 大額
                 { min: 801, max: 2000 },
-                // 超大額
                 { min: 2001, max: 10000 }
             ];
             
@@ -942,10 +553,10 @@
                     // 使用跨國卡號
                     card = crossBorderCards[Math.floor(Math.random() * crossBorderCards.length)];
                 } else {
-                    // 生成普通卡號
-                    const prefix = cardPrefixes[Math.floor(Math.random() * cardPrefixes.length)];
-                    const suffix = Math.random().toString(36).substring(2, 7);
-                    card = prefix + suffix;
+                    // 生成普通卡號（16位數字，模擬銀行卡前綴 + 隨機數字）
+                    const prefix = bankCardPrefixes[Math.floor(Math.random() * bankCardPrefixes.length)];
+                    const randomDigits = Math.floor(100000000000000 + Math.random() * 900000000000000).toString().padStart(15, '0'); // 生成15位隨機數字
+                    card = prefix + randomDigits; // 例如 4477578712345678
                 }
                 
                 // 選擇金額範圍
@@ -992,18 +603,13 @@
             
             // 為跨國交易卡添加同一時間段內的多國交易
             for (const crossCard of crossBorderCards) {
-                // 檢查該卡是否已有交易
                 const cardTransactions = transactions.filter(tx => tx.card === crossCard);
                 
                 if (cardTransactions.length > 0) {
-                    // 從該卡的第一筆交易獲取基礎信息
                     const baseTx = cardTransactions[0];
-                    
-                    // 在1小時內添加一筆不同國家的交易
                     const baseTime = new Date(baseTx.timestamp);
                     const newTime = new Date(baseTime.getTime() + Math.random() * 55 * 60 * 1000); // 55分鐘內
                     
-                    // 找一個不同的國家 (增加台灣的機率)
                     let newCountryCode;
                     if (baseTx.countryCode !== '158' && Math.random() < 0.2) {
                         newCountryCode = '158'; // 台灣
@@ -1013,7 +619,6 @@
                         } while (newCountryCode === baseTx.countryCode);
                     }
                     
-                    // 添加新交易
                     transactions.push({
                         id: transactions.length + 1,
                         card: crossCard,
@@ -1030,12 +635,11 @@
             // 確保至少有一些台灣的交易記錄
             const taiwanTxCount = transactions.filter(tx => tx.countryCode === '158').length;
             if (taiwanTxCount < 5) {
-                // 添加幾筆台灣交易
                 const additionalCount = 5 - taiwanTxCount;
                 for (let i = 0; i < additionalCount; i++) {
-                    const prefix = cardPrefixes[Math.floor(Math.random() * cardPrefixes.length)];
-                    const suffix = Math.random().toString(36).substring(2, 7);
-                    const card = prefix + suffix;
+                    const prefix = bankCardPrefixes[Math.floor(Math.random() * bankCardPrefixes.length)];
+                    const randomDigits = Math.floor(100000000000000 + Math.random() * 900000000000000).toString().padStart(15, '0'); // 生成15位隨機數字
+                    const card = prefix + randomDigits; // 例如 4477578712345678
                     
                     const amountRange = amountRanges[Math.floor(Math.random() * amountRanges.length)];
                     const amount = Math.floor(Math.random() * (amountRange.max - amountRange.min + 1)) + amountRange.min;
@@ -1055,6 +659,39 @@
             
             return transactions;
         }
+
+        function loadTransactions() {
+            transactionTable.innerHTML = '';
+            
+            transactions.forEach(function(tx) {
+                const row = document.createElement('tr');
+                row.setAttribute('data-id', tx.id);
+                
+                // 驗證卡號長度並顯示前8位，後8位掩碼為********
+                let displayCard;
+                if (tx.card.length === 16) {
+                    displayCard = tx.card.substring(0, 8) + '********';
+                } else {
+                    // 如果卡號長度不正確，記錄錯誤並顯示全掩碼
+                    console.warn(`Invalid card length for transaction ${tx.id}: ${tx.card}`);
+                    displayCard = '****************';
+                }
+                
+                row.innerHTML = 
+                    '<td><i class="fas fa-circle-notch fa-spin text-secondary"></i></td>' +
+                    '<td class="font-monospace">' + displayCard + '</td>' +
+                    '<td>' + formatDateTime(tx.timestamp) + '</td>' +
+                    '<td>' + (countryMap[tx.countryCode] || tx.countryCode) + '</td>' +
+                    '<td class="text-end">' + tx.amount.toLocaleString() + '</td>' +
+                    '<td class="text-end"><span class="risk-badge ' + 
+                    (tx.deviceRisk > 0.3 ? 'success' : tx.deviceRisk >= 0 ? 'warning' : 'danger') + 
+                    '">' + tx.deviceRisk.toFixed(1) + '</span></td>' +
+                    '<td></td>';
+                
+                transactionTable.appendChild(row);
+            });
+        }
+
 
         // DOM元素
         var executionZone, availableRules, placeholder, dropIndicator, defaultBtn, customBtn, transactionTable, logPanel;
@@ -1079,15 +716,7 @@
             
             // 初始化世界地圖
             initWorldMap();
-            
-            // 重置地圖按鈕事件
-            document.getElementById('zoom-reset').addEventListener('click', function() {
-                if (worldMap) {
-                    worldMap.dispatchAction({
-                        type: 'restore'
-                    });
-                }
-            });
+    
         };
         
         
@@ -1317,30 +946,6 @@
             });
         }
     }
-
-        // 加載交易資料
-        function loadTransactions() {
-            transactionTable.innerHTML = '';
-            
-            transactions.forEach(function(tx) {
-                const row = document.createElement('tr');
-                row.setAttribute('data-id', tx.id);
-                
-                row.innerHTML = 
-                    '<td><i class="fas fa-circle-notch fa-spin text-secondary"></i></td>' +
-                    '<td class="font-monospace">' + tx.card + '</td>' +
-                    '<td>' + formatDateTime(tx.timestamp) + '</td>' +
-                    '<td>' + (countryMap[tx.countryCode] || tx.countryCode) + '</td>' +
-                    '<td class="text-end">' + tx.amount.toLocaleString() + '</td>' +
-                    '<td class="text-end"><span class="risk-badge ' + 
-                    (tx.deviceRisk > 0.3 ? 'success' : tx.deviceRisk >= 0 ? 'warning' : 'danger') + 
-                    '">' + tx.deviceRisk.toFixed(1) + '</span></td>' +
-                    '<td></td>';
-                
-                transactionTable.appendChild(row);
-            });
-        }
-        
         // 初始化所有規則
         function initializeRules() {
             availableRules.innerHTML = '';
@@ -1612,12 +1217,26 @@
         }
         
         // 添加日誌
+        // function addLog(message) {
+        //     const logEntry = document.createElement('div');
+        //     logEntry.textContent = '> ' + message;
+        //     logPanel.appendChild(logEntry);
+        //     logPanel.scrollTop = logPanel.scrollHeight;
+        // }
+
         function addLog(message) {
+            if (!logPanel) {
+                console.warn('logPanel is not initialized yet: ' + message);
+                return;
+            }
             const logEntry = document.createElement('div');
             logEntry.textContent = '> ' + message;
             logPanel.appendChild(logEntry);
             logPanel.scrollTop = logPanel.scrollHeight;
         }
+
+        
+        
         
         // 清空日誌
         function clearLog() {
@@ -1694,11 +1313,11 @@
                     action = rule.action;
                     
                     // 基於風險等級調整行動
-                    if (riskLevel === 'low' && action === 'BLOCK') {
-                        action = 'REVIEW';
-                    } else if (riskLevel === 'high' && action === 'APPROVE') {
-                        action = 'REVIEW';
-                    }
+                    // if (riskLevel === 'low' && action === 'BLOCK') {
+                    //     action = 'REVIEW';
+                    // } else if (riskLevel === 'high' && action === 'APPROVE') {
+                    //     action = 'REVIEW';
+                    // }
                     
                     // 記錄命中的規則
                     hitRuleCell.innerHTML = '<span class="badge bg-light text-dark">#' + rule.id + '</span> ' + rule.text;
@@ -1785,21 +1404,405 @@ function initWorldMap() {
         }
     });
 }
-function getColorByRiskLevel(riskLevel) {
-    // Risk level is expected to be a value between 1-3
-    // Where 1 is low risk, 2 is medium risk, and 3 is high risk
+// 直接在控制台執行此代碼即可添加並初始化時間風險圖表
+
+// 添加圖表容器
+const timeChartCard = document.createElement('div');
+timeChartCard.className = 'card mt-3';
+timeChartCard.innerHTML = `
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title">交易風險時間分佈</h5>
+            <div class="text-muted small">各時段風險交易數量統計</div>
+        </div>
+        <div id="hourly-risk-chart" style="height: 400px; width: 100%;"></div>
+    </div>
+`;
+
+// 找到合適的位置插入圖表
+const mapCard = document.querySelector('.row:has(#world-map)');
+if (mapCard) {
+    mapCard.after(timeChartCard);
+} else {
+    // 備用選項：添加到容器末尾
+    document.querySelector('.container-fluid').appendChild(timeChartCard);
+}
+
+// 初始化圖表
+const chartDom = document.getElementById('hourly-risk-chart');
+const hourlyRiskChart = echarts.init(chartDom);
+
+// 顯示加載中狀態
+hourlyRiskChart.showLoading({
+    text: '加載交易數據中...',
+    maskColor: 'rgba(255, 255, 255, 0.8)',
+    textColor: '#1890ff'
+});
+
+// 函數：分析交易風險時間分布
+function analyzeHourlyRiskDistribution() {
+    // 初始化每小時的風險計數
+    const hourlyData = Array.from({ length: 24 }, () => ({
+        low: 0,
+        medium: 0,
+        high: 0,
+        total: 0
+    }));
     
-    if (riskLevel < 1.67) {
-        // Low risk - green
-        return '#d4edda';  // Light green
-    } else if (riskLevel < 2.33) {
-        // Medium risk - yellow
-        return '#fff3cd';  // Light yellow
-    } else {
-        // High risk - red
-        return '#f8d7da';  // Light red
+    // 獲取所有交易行
+    const rows = document.querySelectorAll('#transaction-table tr');
+    
+    // 統計每小時的風險分布
+    rows.forEach(row => {
+        const txId = row.getAttribute('data-id');
+        if (!txId) return;
+        
+        const tx = transactions.find(t => t.id == txId);
+        if (!tx) return;
+        
+        // 獲取交易時間的小時數
+        const txTime = new Date(tx.timestamp);
+        const hour = txTime.getHours();
+        
+        // 獲取風險級別
+        const statusIcon = row.querySelector('td:first-child i');
+        let riskLevel = 'medium'; // 預設中風險
+        
+        if (statusIcon) {
+            if (statusIcon.classList.contains('text-success')) {
+                riskLevel = 'low';
+            } else if (statusIcon.classList.contains('text-warning')) {
+                riskLevel = 'medium';
+            } else if (statusIcon.classList.contains('text-danger')) {
+                riskLevel = 'high';
+            }
+        }
+        
+        // 增加計數
+        hourlyData[hour][riskLevel]++;
+        hourlyData[hour].total++;
+    });
+    
+    return hourlyData;
+}
+
+// 函數：更新圖表
+function updateHourlyRiskChart() {
+    // 分析數據
+    const hourlyRiskData = analyzeHourlyRiskDistribution();
+    
+    // 提取圖表數據
+    const xAxisData = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+    const lowRiskData = hourlyRiskData.map(h => h.low);
+    const mediumRiskData = hourlyRiskData.map(h => h.medium);
+    const highRiskData = hourlyRiskData.map(h => h.high);
+    
+    // 設置圖表配置
+    const option = {
+        title: {
+            text: '各時段交易風險分佈',
+            subtext: '按小時統計的不同風險等級交易數量',
+            left: 'center',
+            top: 10
+        },
+        legend: {
+            data: ['低風險', '中風險', '高風險'],
+            left: '10%',
+            bottom: 10
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: {},
+                dataView: {}
+            }
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'shadow'
+            },
+            formatter: function(params) {
+                let total = 0;
+                let result = `${params[0].axisValueLabel}<br>`;
+                
+                params.forEach(param => {
+                    total += param.value;
+                    result += `${param.marker} ${param.seriesName}: ${param.value}<br>`;
+                });
+                
+                result += `<b>總計: ${total}</b>`;
+                return result;
+            }
+        },
+        xAxis: {
+            data: xAxisData,
+            name: '小時',
+            axisLine: { onZero: true },
+            splitLine: { show: false },
+            splitArea: { show: false }
+        },
+        yAxis: {
+            name: '交易數量'
+        },
+        grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '15%',
+            top: '15%',
+            containLabel: true
+        },
+        series: [
+            {
+                name: '低風險',
+                type: 'bar',
+                stack: '風險',
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0,0,0,0.3)'
+                    }
+                },
+                data: lowRiskData,
+                itemStyle: {
+                    color: '#4CAF50' // 綠色
+                }
+            },
+            {
+                name: '中風險',
+                type: 'bar',
+                stack: '風險',
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0,0,0,0.3)'
+                    }
+                },
+                data: mediumRiskData,
+                itemStyle: {
+                    color: '#FFB300' // 黃色
+                }
+            },
+            {
+                name: '高風險',
+                type: 'bar',
+                stack: '風險',
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0,0,0,0.3)'
+                    }
+                },
+                data: highRiskData,
+                itemStyle: {
+                    color: '#E57373' // 紅色
+                }
+            }
+        ]
+    };
+    
+    // 更新圖表
+    hourlyRiskChart.setOption(option);
+    hourlyRiskChart.hideLoading();
+    
+    // 添加日誌
+    if (typeof addLog === 'function') {
+        addLog('已更新風險時間分佈圖表');
     }
 }
+
+// 修改原始執行規則函數
+const originalExecuteRules = window.executeRules;
+window.executeRules = function() {
+    // 先調用原始執行規則函數
+    originalExecuteRules.apply(this, arguments);
+    
+    // 延遲更新圖表，確保交易狀態已更新
+    setTimeout(updateHourlyRiskChart, 500);
+};
+
+// 處理窗口大小調整
+window.addEventListener('resize', function() {
+    if (hourlyRiskChart) {
+        hourlyRiskChart.resize();
+    }
+});
+
+// 立即執行首次更新
+updateHourlyRiskChart();
+
+// 添加日誌
+if (typeof addLog === 'function') {
+    addLog('風險時間分佈圖表已初始化，執行規則後會自動更新');
+}
+
+
+
+
+// 我是圓餅圖-------------------------
+// 函數：分析交易風險分布
+function analyzeRiskDistribution() {
+    // 初始化風險計數
+    const riskData = {
+        high: 0,
+        medium: 0,
+        low: 0,
+        total: 0
+    };
+    
+    // 獲取所有交易行
+    const rows = document.querySelectorAll('#transaction-table tr');
+    
+    // 統計風險分布
+    rows.forEach(row => {
+        const txId = row.getAttribute('data-id');
+        if (!txId) return;
+        
+        // 獲取風險級別
+        const statusIcon = row.querySelector('td:first-child i');
+        if (!statusIcon) return;
+        
+        // 根據圖標類別判斷風險級別
+        if (statusIcon.classList.contains('text-success')) {
+            riskData.low++;
+        } else if (statusIcon.classList.contains('text-warning')) {
+            riskData.medium++;
+        } else if (statusIcon.classList.contains('text-danger')) {
+            riskData.high++;
+        }
+        
+        riskData.total++;
+    });
+    
+    return riskData;
+}
+
+// 函數：更新風險分布圓餅圖
+function updateRiskPieChart() {
+    // 獲取風險分布數據
+    const riskData = analyzeRiskDistribution();
+    
+    // 添加日誌
+    addLog(`風險分布分析: 高風險 ${riskData.high} 筆, 中風險 ${riskData.medium} 筆, 低風險 ${riskData.low} 筆, 總計 ${riskData.total} 筆`);
+    
+    // 圖表配置
+    const option = {
+        title: {
+            text: '交易風險分布',
+            subtext: `總計 ${riskData.total} 筆交易`,
+            left: 'center'
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: '{a} <br/>{b}: {c} 筆 ({d}%)'
+        },
+        legend: {
+            orient: 'vertical',
+            left: 'left',
+            data: ['高風險', '中風險', '低風險']
+        },
+        series: [
+            {
+                name: '風險等級',
+                type: 'pie',
+                radius: '50%',
+                data: [
+                    { value: riskData.high, name: '高風險' },
+                    { value: riskData.medium, name: '中風險' },
+                    { value: riskData.low, name: '低風險' }
+                ],
+                itemStyle: {
+                    color: function(params) {
+                        const colorList = [
+                            '#E57373', // 高風險 - 紅色
+                            '#FFB300', // 中風險 - 黃色
+                            '#4CAF50'  // 低風險 - 綠色
+                        ];
+                        return colorList[params.dataIndex];
+                    }
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                },
+                label: {
+                    show: true,
+                    formatter: '{b}: {c} 筆 ({d}%)'
+                }
+            }
+        ]
+    };
+    
+    return option;
+}
+
+// 添加到頁面
+function addRiskPieChart() {
+    // 創建圖表容器
+    const pieChartCard = document.createElement('div');
+    pieChartCard.className = 'card mt-3';
+    pieChartCard.innerHTML = `
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title">交易風險分布</h5>
+                <div class="text-muted small">各風險等級交易數量統計</div>
+            </div>
+            <div id="risk-pie-chart" style="height: 400px; width: 100%;"></div>
+        </div>
+    `;
+    
+    // 找到時間圖表插入後方
+    const timeChartCard = document.querySelector('.card:has(#hourly-risk-chart)');
+    if (timeChartCard) {
+        timeChartCard.after(pieChartCard);
+    } else {
+        // 備用選項：添加到容器末尾
+        document.querySelector('.container-fluid').appendChild(pieChartCard);
+    }
+    
+    // 初始化圖表
+    const chartDom = document.getElementById('risk-pie-chart');
+    const riskPieChart = echarts.init(chartDom);
+    
+    // 顯示加載中狀態
+    riskPieChart.showLoading({
+        text: '分析交易數據中...',
+        maskColor: 'rgba(255, 255, 255, 0.8)',
+        textColor: '#1890ff'
+    });
+    
+    // 更新圖表
+    const option = updateRiskPieChart();
+    riskPieChart.setOption(option);
+    riskPieChart.hideLoading();
+    
+    // 處理窗口大小調整
+    window.addEventListener('resize', function() {
+        if (riskPieChart) {
+            riskPieChart.resize();
+        }
+    });
+    
+    // 修改原始執行規則函數，加入圓餅圖更新
+    const originalExecuteRules = window.executeRules;
+    window.executeRules = function() {
+        // 先調用原始執行規則函數
+        originalExecuteRules.apply(this, arguments);
+        
+        // 延遲更新圖表，確保交易狀態已更新
+        setTimeout(() => {
+            const updatedOption = updateRiskPieChart();
+            riskPieChart.setOption(updatedOption);
+        }, 500);
+    };
+    
+    addLog('風險分布圓餅圖已初始化，執行規則後會自動更新');
+}
+
+// 執行添加圖表
+addRiskPieChart();
 </script>
 </body>
 </html>

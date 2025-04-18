@@ -1,0 +1,333 @@
+body {
+    background-color: #f0f2f5;
+    min-height: 100vh;
+    padding: 20px;
+    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}
+
+.container-fluid {
+    padding: 0 30px;
+}
+
+.title-area {
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: none;
+    margin-bottom: 20px;
+    background-color: #fff;
+    height: calc(100% - 20px);
+}
+
+.rule-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: move;
+    position: relative;
+    transition: all 0.2s;
+    width: 100%; /* Ensure it takes full width */
+    min-width: 250px; /* Minimum width to fit content */
+}
+
+.rule-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.rule-item.success {
+    border-left: 4px solid #10b981;
+    background-color: #ecfdf5;
+}
+
+.rule-item.warning {
+    border-left: 4px solid #f59e0b;
+    background-color: #fffbeb;
+}
+
+.rule-item.danger {
+    border-left: 4px solid #ef4444;
+    background-color: #fef2f2;
+}
+
+.rule-icon {
+    display: inline-flex;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+
+.rule-icon.success {
+    background-color: #10b981;
+    color: white;
+}
+
+.rule-icon.warning {
+    background-color: #f59e0b;
+    color: white;
+}
+
+.rule-icon.danger {
+    background-color: #ef4444;
+    color: white;
+}
+
+.rule-actions {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: none;
+}
+
+.rule-item:hover .rule-actions {
+    display: flex;
+}
+
+.rule-actions button, .btn-action {
+    border: none;
+    background: none;
+    padding: 4px;
+    margin-left: 4px;
+    color: #6b7280;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.rule-actions button:hover, .btn-action:hover {
+    color: #1890ff;
+}
+
+.rule-actions .fa-times:hover {
+    color: #f5222d;
+}
+
+.handle {
+    cursor: grab;
+}
+
+.drop-zone {
+    min-height: 150px;
+    max-height: 300px; /* 添加最大高度 */
+    height: 300px; /* 固定高度 */
+    border: 2px dashed #d9d9d9;
+    border-radius: 4px;
+    background-color: #fafafa;
+    padding: 15px;
+    margin-bottom: 15px;
+    width: 100%;
+    overflow-y: auto; /* 添加垂直捲軸 */
+}
+
+.drop-zone-placeholder {
+    color: #999;
+    text-align: center;
+    padding: 20px;
+}
+
+.drop-indicator {
+    height: 2px;
+    background-color: #1890ff;
+    margin: 5px 0;
+    display: none;
+}
+
+.drop-indicator.active {
+    display: block;
+}
+
+.description-area {
+    min-height: 80px;
+    padding: 15px;
+    background-color: #fafafa;
+    border-radius: 4px;
+    border-left: 4px solid #1890ff;
+}
+
+.transaction-table th {
+    background-color: #001529;
+    color: white;
+    border: none;
+}
+
+.transaction-table tbody tr:nth-child(odd) {
+    background-color: #f5f5f5;
+}
+
+.transaction-table tbody tr:hover {
+    background-color: #e6f7ff;
+}
+
+.risk-badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.risk-badge.success {
+    background-color: #f6ffed;
+    color: #52c41a;
+}
+
+.risk-badge.warning {
+    background-color: #fffbe6;
+    color: #faad14;
+}
+
+.risk-badge.danger {
+    background-color: #fff1f0;
+    color: #f5222d;
+}
+
+tr.highlighted {
+    background-color: #e6f7ff !important;
+}
+
+.log-panel {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    max-height: 120px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 12px;
+    min-height: 120px;
+}
+
+.available-rules-card {
+    max-height: 450px;
+    overflow-y: auto;
+}
+
+/* Fixed width for rule panels */
+.rules-panel {
+    width: 100%;
+    min-width: 250px;
+}
+
+/* Rule number styling */
+.rule-number {
+    display: inline-flex;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    justify-content: center;
+    align-items: center;
+    margin-right: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    background-color: #e6e6e6;
+    color: #333;
+    flex-shrink: 0;
+    padding: 0 4px;
+}
+
+/* 地圖相關樣式 */
+#world-map {
+    height: 400px;
+    width: 100%;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
+
+.map-controls {
+    margin-bottom: 10px;
+}
+
+.map-legend {
+    padding: 8px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 100;
+    font-size: 12px;
+}
+
+/* 添加以下 CSS 樣式到您的樣式表中 */
+
+/* 限制表格容器的最大寬度 */
+.table-container {
+max-width: 100%;
+overflow-x: auto;
+/* 為捲軸添加一些內距，避免內容太靠近底部 */
+padding-bottom: 5px;
+}
+
+/* 確保表格內容不會被壓縮 */
+.transaction-table {
+width: 100%;
+/* 設定表格的最小寬度，確保內容不會被壓縮 */
+min-width: 750px;
+}
+
+/* 定義各列的固定寬度 */
+.transaction-table th:nth-child(1), 
+.transaction-table td:nth-child(1) {
+width: 60px;
+}
+
+.transaction-table th:nth-child(2), 
+.transaction-table td:nth-child(2) {
+width: 120px;
+}
+
+.transaction-table th:nth-child(3), 
+.transaction-table td:nth-child(3) {
+width: 150px;
+}
+
+.transaction-table th:nth-child(4), 
+.transaction-table td:nth-child(4) {
+width: 100px;
+}
+
+.transaction-table th:nth-child(5), 
+.transaction-table td:nth-child(5) {
+width: 80px;
+}
+
+.transaction-table th:nth-child(6), 
+.transaction-table td:nth-child(6) {
+width: 100px;
+}
+
+.transaction-table th:nth-child(7), 
+.transaction-table td:nth-child(7) {
+width: 200px;
+}
+
+/* 美化捲軸樣式 (現代瀏覽器) */
+.table-container::-webkit-scrollbar {
+height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+background: #f1f1f1;
+border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+background: #c1c1c1;
+border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+background: #a8a8a8;
+}
+.fixed-width-container {
+    max-height: 735px;
+    width: 100%;     
+    overflow-x: auto;
+}
