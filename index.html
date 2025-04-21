@@ -708,14 +708,6 @@
                     }
                 });
 
-                // 記錄規則 #7 命中分佈
-                const rule7Log = Array.from(rule7Hits.entries())
-                    .map(([code, count]) => `${Data.countryMap[code] || code}: ${count} 筆`)
-                    .join(', ');
-                if (rule7Log) {
-                    Utils.addLog(`規則 #7 命中分佈: ${rule7Log}`);
-                }
-
                 ChartManager.updateAll();
             },
 
@@ -848,17 +840,11 @@
                         }
                     });
 
-                    // 記錄高風險交易和規則 #7 命中分佈
+                    // 記錄高風險交易
                     const highRiskLog = Array.from(highRiskCounts.entries())
                         .map(([code, count]) => `${Data.countryMap[code] || code}: ${count} 筆`)
                         .join(', ');
-                    const rule7Log = Array.from(rule7Counts.entries())
-                        .map(([code, count]) => `${Data.countryMap[code] || code}: ${count} 筆`)
-                        .join(', ');
-                    Utils.addLog(`高風險交易分佈: ${highRiskLog}`);
-                    if (rule7Log) {
-                        Utils.addLog(`規則 #7 命中分佈: ${rule7Log}`);
-                    }
+
 
                     const mapData = Array.from(countryCounts.entries()).map(([code, total]) => ({
                         name: Data.countryEChartsMap[code] || Data.countryMap[code] || code,
@@ -879,7 +865,6 @@
                                 ? `${Data.countryMap[params.data.originalCode] || params.data.originalCode}<br/>
                                    總交易數量: ${params.data.totalCount} 筆<br/>
                                    高風險交易: ${params.data.highRiskCount} 筆<br/>
-                                   規則 #7 命中: ${params.data.rule7Count} 筆<br/>
                                    高風險比例: ${params.data.highRiskPercentage}%`
                                 : params.name
                         },
