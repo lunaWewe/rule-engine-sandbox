@@ -24,9 +24,9 @@
                     <div class="col-md-6">
                         <div class="card available-rules-card">
                             <div class="card-body">
-                                <h5 class="card-title border-bottom pb-2">可用規則</h5>
+                                <h5 id="rules-title" class="card-title border-bottom pb-2" style="cursor: pointer;" onclick="RuleManager.handleTitleClick()">可用規則</h5>
                                 <div class="mb-3">
-                                    <div class="btn-group w-100 mb-3">
+                                    <div id="button-group" class="btn-group w-100 mb-3" style="display: none;">
                                         <button id="default-btn" class="btn btn-outline-primary active" onclick="RuleManager.applyDefaultRules()">預設決策</button>
                                         <button id="custom-btn" class="btn btn-outline-primary" onclick="RuleManager.clearRules()">自訂決策</button>
                                     </div>
@@ -474,14 +474,55 @@
 
                 this.initializeRules();
                 TransactionManager.loadTransactions();
-                this.applyDefaultRules();
                 ChartManager.init();
+
+                const rulesTitle = document.getElementById('rules-title');
+                if (rulesTitle) {
+                    rulesTitle.addEventListener('click', () => this.handleTitleClick());
+                }
             },
 
             initializeRules() {
                 this.elements.availableRules.innerHTML = '';
                 Data.rules.forEach(rule => this.addRuleToAvailable(rule));
             },
+
+            handleTitleClick: function(event) {
+                // 防止事件冒泡
+                if (event) {
+                    event.stopPropagation();
+                }
+                
+                // 使用防抖動，確保短時間內多次調用只執行一次
+                if (this.titleClickTimer) {
+                    clearTimeout(this.titleClickTimer);
+                }
+                
+                this.titleClickTimer = setTimeout(() => {
+                    // 使用變數存儲點擊次數
+                    if (!window.titleClickCount) {
+                        window.titleClickCount = 0;
+                    }
+                    window.titleClickCount++;
+                    
+                    console.log('標題被點擊了', window.titleClickCount, '次');
+                    
+                    if (window.titleClickCount >= 4) {
+                        const buttonGroup = document.querySelector('.btn-group.w-100.mb-3');
+                        if (buttonGroup) {
+                            buttonGroup.style.display = 'flex';
+                            console.log('按鈕群組已顯示');
+                            Utils.addLog('決策按鈕已顯示');
+
+                             // 在這裡添加應用預設規則的代碼
+                            this.applyDefaultRules();
+                            console.log('已應用預設規則');
+                            Utils.addLog('已應用預設規則');
+                                    }
+                    }
+                }, 100); // 100毫秒內的多次點擊只算一次
+            },
+
 
             addRuleToAvailable(rule) {
                 if (document.querySelector(`#available-rules [data-id="${rule.id}"]`)) return;
