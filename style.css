@@ -75,16 +75,6 @@ body, html {
     box-shadow: 0 4px 10px rgba(144, 114, 232, 0.3);
 }
 
-.btn-dark {
-    background: linear-gradient(0deg, #d581ff, #9072e8);
-    border: none;
-    border-radius: 16px;
-    font-family: Poppins-Medium;
-    padding: 12px 25px;
-    box-shadow: 0 4px 10px rgba(144, 114, 232, 0.3);
-    color: white;
-}
-
 .btn-outline-primary {
     color: #9072e8;
     border-color: #9072e8;
@@ -248,25 +238,6 @@ body, html {
     color: #9072e8;
 }
 
-/* 表格樣式 */
-.transaction-table {
-    width: 100%;
-    min-width: 750px;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.transaction-table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: #9072e8;
-    color: white;
-    padding: 12px 15px;
-    font-family: Poppins-Medium;
-    border: none;
-}
-
 .transaction-table thead th:first-child {
     border-top-left-radius: 10px;
 }
@@ -371,7 +342,7 @@ tr.highlighted {
     min-width: 750px;
     border-collapse: separate;
     border-spacing: 0;
-    table-layout: fixed; /* 添加此行使表格使用固定布局 */
+    table-layout: fixed; 
 }
 
 .transaction-table thead th {
@@ -385,7 +356,6 @@ tr.highlighted {
     border: none;
     white-space: normal; /* 允许文本换行 */
     overflow-wrap: break-word; /* 长单词换行 */
-    word-wrap: break-word;
     hyphens: auto; /* 自动添加连字符 */
 }
 
@@ -480,6 +450,7 @@ tr.highlighted {
     z-index: 1;
     box-shadow: 0 4px 10px rgba(144, 114, 232, 0.3);
 }
+
 .btn-dark::before {
     content: '';
     position: absolute;

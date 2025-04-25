@@ -28,7 +28,7 @@
                 <div class="row">
                     <!-- Available rules -->
                     <div class="col-md-6">
-                        <div class="card h-100 available-rules-card">
+                        <div class="card h-100 available-rules-card rounded-5">
                             <div class="card-body">
                                 <h5 id="rules-title" class="card-title border-bottom pb-2" style="cursor: pointer;" onclick="RuleManager.handleTitleClick()">可用規則</h5>
                                 <div class="mb-3">
@@ -44,7 +44,7 @@
                     
                     <!-- Policy selection -->
                     <div class="col-md-6">
-                        <div class="card h-100">
+                        <div class="card rounded-5 h-100">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="card-title mb-0">決策配置</h5>
@@ -76,7 +76,7 @@
                 <div class="row mt-3">
                     <!-- Description area -->
                     <div class="col-md-12">
-                        <div class="card">
+                        <div class="card rounded-5 ">
                             <div class="card-body">
                                 <div class="description-area" id="description-area">
                                     <div class="d-flex align-items-start">
@@ -92,7 +92,7 @@
             
             <!-- Transaction Table -->
             <div class="col-md-6">
-                <div class="card">
+                <div class="card rounded-5 ">
                     <div class="card-body">
                         <div class="table-responsive fixed-width-container">
                             <table class="table transaction-table">
@@ -116,8 +116,8 @@
         </div>
         
         <!-- Charts -->
-        <div class="row">
-            <div class="card mt-3">
+        <div class="row m-0" style="padding: 0px;">
+            <div class="card rounded-5 mt-3 p-0">
                 <div class="card-body">
                     <!-- <h5 class="card-title mb-3">交易地區分佈</h5> -->
                     <div id="world-map" style="height: 400px; width: 100%;"></div>
@@ -125,8 +125,8 @@
             </div>
             <div class="row mt-3">
                 <!-- 圓餅圖 - 左側1/4 -->
-                <div class="col-md-3">
-                  <div class="card h-100">
+                <div class="col-md-3 ">
+                  <div class=" card rounded-5 h-100">
                     <div class="card-body">
                       <!-- <h5 class="card-title mb-3">交易風險分佈</h5> -->
                       <div id="risk-pie-chart" style="height: 350px; width: 100%;"></div>
@@ -136,7 +136,7 @@
                 
                 <!-- 柱狀圖 - 右側3/4 -->
                 <div class="col-md-9">
-                  <div class="card h-100">
+                  <div class=" card rounded-5 h-100">
                     <div class="card-body">
                       <!-- <h5 class="card-title mb-3">交易風險時間分佈</h5> -->
                       <div id="hourly-risk-chart" style="height: 350px; width: 100%;"></div>
@@ -177,7 +177,7 @@
                 const txTime = new Date(tx.timestamp);
                 const countries = new Set(
                     transactions
-                        .filter(t => t.card === tx.card)
+                        .filter(t => t. card === tx.card)
                         .filter(t => Math.abs((txTime - new Date(t.timestamp)) / (1000 * 60)) <= 15)
                         .map(t => t.countryCode)
                 );
