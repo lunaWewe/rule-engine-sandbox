@@ -1,59 +1,152 @@
+/* 將HiTRUST | DIIA風格應用到風險規則引擎沙盒 */
+
+/* 字體配置 */
+@font-face { font-family: Poppins-Light; src: url('Poppins-Light.ttf'); }
+@font-face { font-family: Poppins-SemiBold; src: url('Poppins-SemiBold.ttf'); }
+@font-face { font-family: Poppins-Medium; src: url('Poppins-Medium.ttf'); }
+
+/* 基本樣式 */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Poppins-Medium, "Microsoft YaHei", sans-serif;
+}
+
+/* 背景配置 */
 .bkgd {
-    background-color: #f0f2f5;
+    background-image: url('./bj2.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center bottom;
+    background-attachment: fixed;
     min-height: 100vh;
     padding: 20px;
-    font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
 }
 
 .container-fluid {
     padding: 0 30px;
 }
 
+/* 標題區域 */
 .title-area {
-    color: #333;
+    color: #fff;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
+    padding-top: 30px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
 }
 
+.title-area h2 {
+    font-family: Poppins-SemiBold;
+    font-size: 42px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+/* 卡片樣式 */
 .card {
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     border: none;
     margin-bottom: 20px;
-    background-color: #fff;
-    height: calc(100% - 20px);
+    background-color: #f8f5fc;
+    overflow: hidden;
 }
 
+.card-body {
+    background-color: #f8f5fc;
+    padding: 20px;
+}
+
+.card-title {
+    font-family: Poppins-SemiBold;
+    color: #9072e8;
+    font-size: 22px;
+    margin-bottom: 20px;
+}
+
+/* 按鈕樣式 */
+.btn-primary {
+    background: linear-gradient(0deg, #d581ff, #9072e8);
+    border: none;
+    border-radius: 16px;
+    font-family: Poppins-Medium;
+    padding: 10px 20px;
+    box-shadow: 0 4px 10px rgba(144, 114, 232, 0.3);
+}
+
+.btn-dark {
+    background: linear-gradient(0deg, #d581ff, #9072e8);
+    border: none;
+    border-radius: 16px;
+    font-family: Poppins-Medium;
+    padding: 12px 25px;
+    box-shadow: 0 4px 10px rgba(144, 114, 232, 0.3);
+    color: white;
+}
+
+.btn-outline-primary {
+    color: #9072e8;
+    border-color: #9072e8;
+    border-radius: 16px;
+}
+
+.btn-outline-primary.active, .btn-outline-primary:hover {
+    background-color: #9072e8;
+    color: white;
+}
+
+/* 規則項目樣式 */
 .rule-item {
-    margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 6px;
+    margin-bottom: 12px;
+    padding: 12px 15px;
+    border-radius: 12px;
     cursor: move;
     position: relative;
     transition: all 0.2s;
     width: 100%;
     min-width: 250px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
 .rule-item:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .rule-item.success {
-    border-left: 4px solid #10b981;
-    background-color: #ecfdf5;
+    border-left: 4px solid #4CAF50;
+    background-color: #f0fff4;
 }
 
 .rule-item.warning {
-    border-left: 4px solid #f59e0b;
+    border-left: 4px solid #ffc107;
     background-color: #fffbeb;
 }
 
 .rule-item.danger {
-    border-left: 4px solid #ef4444;
-    background-color: #fef2f2;
+    border-left: 4px solid #f44336;
+    background-color: #fff5f5;
 }
 
+/* 規則編號樣式 */
+.rule-number {
+    background-color: rgba(144, 114, 232, 0.15);
+    color: #9072e8;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    margin-right: 10px;
+    font-weight: 600;
+}
+
+/* 規則圖標樣式 */
 .rule-icon {
     display: inline-flex;
     width: 28px;
@@ -66,60 +159,57 @@
 }
 
 .rule-icon.success {
-    background-color: #10b981;
+    background-color: #4CAF50;
     color: white;
 }
 
 .rule-icon.warning {
-    background-color: #f59e0b;
+    background-color: #ffc107;
     color: white;
 }
 
 .rule-icon.danger {
-    background-color: #ef4444;
+    background-color: #f44336;
     color: white;
 }
 
+/* 規則操作區域 */
 .rule-actions {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    display: none;
-}
-
-.rule-item:hover .rule-actions {
     display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.rule-actions button, .btn-action {
-    border: none;
-    background: none;
+.rule-actions .handle {
+    color: #9072e8;
+    cursor: move;
     padding: 4px;
-    margin-left: 4px;
-    color: #6b7280;
-    font-size: 14px;
+}
+
+.btn-action {
+    background: none;
+    border: none;
+    color: #9072e8;
     cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
 }
 
-.rule-actions button:hover, .btn-action:hover {
-    color: #1890ff;
+.btn-action:hover {
+    background-color: rgba(144, 114, 232, 0.1);
 }
 
-.rule-actions .fa-times:hover {
-    color: #f5222d;
-}
-
-.handle {
-    cursor: grab;
-}
-
+/* 投放區域樣式 */
 .drop-zone {
     min-height: 150px;
-    max-height: 300px;
-    height: 300px;
-    border: 2px dashed #d9d9d9;
-    border-radius: 4px;
+    max-height: 450px;
+    height: 450px;
+    border: 2px dashed #d581ff;
+    border-radius: 12px;
     background-color: #fafafa;
     padding: 15px;
     margin-bottom: 15px;
@@ -128,14 +218,15 @@
 }
 
 .drop-zone-placeholder {
-    color: #999;
+    color: #9072e8;
     text-align: center;
-    padding: 20px;
+    padding: 40px 20px;
+    font-family: Poppins-Light;
 }
 
 .drop-indicator {
     height: 2px;
-    background-color: #1890ff;
+    background-color: #9072e8;
     margin: 5px 0;
     display: none;
 }
@@ -144,173 +235,259 @@
     display: block;
 }
 
+/* 描述區域樣式 */
 .description-area {
     min-height: 80px;
     padding: 15px;
-    background-color: #fafafa;
-    border-radius: 4px;
-    border-left: 4px solid #1890ff;
+    background-color: #f8f5fc;
+    border-radius: 12px;
+    border-left: 4px solid #9072e8;
 }
 
-.transaction-table thead th {
-    background-color: #001529 !important;
-    color: white !important;
-    border: none !important;
+.description-area i {
+    color: #9072e8;
 }
 
-.transaction-table tbody tr:nth-child(odd) {
-    background-color: #f5f5f5;
-}
-
-.transaction-table tbody tr:hover {
-    background-color: #e6f7ff;
-}
-
-.risk-badge {
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.risk-badge.success {
-    background-color: #f6ffed;
-    color: #52c41a;
-}
-
-.risk-badge.warning {
-    background-color: #fffbe6;
-    color: #faad14;
-}
-
-.risk-badge.danger {
-    background-color: #fff1f0;
-    color: #f5222d;
-}
-
-tr.highlighted {
-    background-color: #e6f7ff !important;
-}
-
-.log-panel {
-    margin-top: 10px;
-    padding: 10px;
-    background-color: #f5f5f5;
-    border-radius: 4px;
-    max-height: 120px;
-    overflow-y: auto;
-    font-family: monospace;
-    font-size: 12px;
-    min-height: 120px;
-}
-
-.available-rules-card {
-    max-height: 450px;
-    overflow-y: auto;
-}
-
-.rules-panel {
-    width: 100%;
-    max-width: 425px;
-}
-
-.rule-number {
-    display: inline-flex;
-    min-width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    justify-content: center;
-    align-items: center;
-    margin-right: 6px;
-    font-size: 12px;
-    font-weight: bold;
-    background-color: #e6e6e6;
-    color: #333;
-    flex-shrink: 0;
-    padding: 0 4px;
-}
-
-#world-map, #hourly-risk-chart, #risk-pie-chart {
-    height: 400px;
-    width: 100%;
-    background-color: #f9f9f9;
-    border-radius: 4px;
-}
-
-.map-controls {
-    margin-bottom: 10px;
-}
-
-.map-legend {
-    padding: 8px;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 4px;
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    z-index: 100;
-    font-size: 12px;
-}
-
-.table-container {
-    max-width: 100%;
-    overflow-x: auto;
-    padding-bottom: 5px;
-}
-
+/* 表格樣式 */
 .transaction-table {
     width: 100%;
     min-width: 750px;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
-.transaction-table th:nth-child(1), .transaction-table td:nth-child(1) {
-    width: 60px;
+.transaction-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #9072e8;
+    color: white;
+    padding: 12px 15px;
+    font-family: Poppins-Medium;
+    border: none;
 }
 
-.transaction-table th:nth-child(2), .transaction-table td:nth-child(2) {
-    width: 120px;
+.transaction-table thead th:first-child {
+    border-top-left-radius: 10px;
 }
 
-.transaction-table th:nth-child(3), .transaction-table td:nth-child(3) {
-    width: 150px;
+.transaction-table thead th:last-child {
+    border-top-right-radius: 10px;
 }
 
-.transaction-table th:nth-child(4), .transaction-table td:nth-child(4) {
-    width: 100px;
+.transaction-table tbody tr:nth-child(odd) {
+    background-color: #f5f0ff;
 }
 
-.transaction-table th:nth-child(5), .transaction-table td:nth-child(5) {
-    width: 80px;
+.transaction-table tbody tr:hover {
+    background-color: #e6e0ff;
 }
 
-.transaction-table th:nth-child(6), .transaction-table td:nth-child(6) {
-    width: 100px;
+.transaction-table td {
+    padding: 10px 15px;
+    border-top: 1px solid #e9e3ff;
+    font-family: Poppins-Light;
 }
 
-.transaction-table th:nth-child(7), .transaction-table td:nth-child(7) {
-    width: 200px;
+.risk-badge {
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
 }
 
-.table-container::-webkit-scrollbar {
+.risk-badge.success {
+    background-color: #e8f5e9;
+    color: #4CAF50;
+}
+
+.risk-badge.warning {
+    background-color: #fff8e1;
+    color: #ffc107;
+}
+
+.risk-badge.danger {
+    background-color: #ffebee;
+    color: #f44336;
+}
+
+tr.highlighted {
+    background-color: #eae3ff;
+}
+
+/* 圖表容器 */
+#world-map, #hourly-risk-chart, #risk-pie-chart {
+    height: 400px;
+    width: 100%;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* 表單元素 */
+.form-select, .form-control {
+    border-radius: 12px;
+    border: 1px solid #d0c8e8;
+    padding: 8px 15px;
+    font-family: Poppins-Light;
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: #9072e8;
+    box-shadow: 0 0 0 0.25rem rgba(144, 114, 232, 0.25);
+}
+
+/* 捲動按鈕 */
+#scroll-button {
+    background: linear-gradient(0deg, #d581ff, #9072e8);
+    border: none;
+    box-shadow: 0 4px 10px rgba(144, 114, 232, 0.5);
+}
+
+/* 捲動條樣式 */
+::-webkit-scrollbar {
+    width: 8px;
     height: 8px;
 }
 
-.table-container::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
 }
 
-.table-container::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
+::-webkit-scrollbar-thumb {
+    background: #d0c8e8;
     border-radius: 4px;
 }
 
-.table-container::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+::-webkit-scrollbar-thumb:hover {
+    background: #9072e8;
 }
 
-.fixed-width-container {
-    max-height: 735px;
+/* 修改表格样式，固定表头宽度 */
+.transaction-table {
     width: 100%;
-    overflow-x: auto;
+    min-width: 750px;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed; /* 添加此行使表格使用固定布局 */
+}
+
+.transaction-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #9072e8;
+    color: white;
+    padding: 12px 15px;
+    font-family: Poppins-Medium;
+    border: none;
+    white-space: normal; /* 允许文本换行 */
+    overflow-wrap: break-word; /* 长单词换行 */
+    word-wrap: break-word;
+    hyphens: auto; /* 自动添加连字符 */
+}
+
+/* 为不同列设置固定宽度 */
+.transaction-table th:nth-child(1) { width: 60px; } /* 状态列 */
+.transaction-table th:nth-child(2) { width: 120px; } /* 卡号列 */
+.transaction-table th:nth-child(3) { width: 140px; } /* 时间列 */
+.transaction-table th:nth-child(4) { width: 80px; } /* 国家列 */
+.transaction-table th:nth-child(5) { width: 80px; } /* 金额列 */
+.transaction-table th:nth-child(6) { width: 100px; } /* 设备风险列 */
+.transaction-table th:nth-child(7) { width: 170px; } /* 命中规则列 */
+
+.transaction-table thead th:first-child {
+    border-top-left-radius: 10px;
+}
+
+.transaction-table thead th:last-child {
+    border-top-right-radius: 10px;
+}
+
+/* 表格单元格样式 */
+.transaction-table td {
+    padding: 10px 15px;
+    border-top: 1px solid #e9e3ff;
+    font-family: Poppins-Light;
+    white-space: normal; /* 允许文本换行 */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+/* 改进表格容器样式 */
+.fixed-width-container {
+    max-height: 700px;
+    overflow-y: auto;
+    overflow-x: auto; /* 添加水平滚动 */
+    border-radius: 12px;
+    background-color: white;
+}
+
+.available-rules-card {
+    height: 600px;
+    max-height: 600px;
+    overflow: hidden;
+}
+
+.available-rules-card .card-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-bottom: 0;
+}
+
+#available-rules {
+    max-height: 450px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* 改進可用規則區的寬度控制 */
+.rules-panel {
+    width: 100%;
+}
+
+/* 按鈕組樣式 */
+.btn-group.w-100 {
+    margin-bottom: 15px;
+}
+
+/* 規則內容樣式 */
+.rule-item .d-flex {
+    flex: 1;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    align-items: center;
+}
+
+.rule-item .d-flex span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-dark, button.btn-dark {
+    position: relative;
+    background: none;
+    border: none;
+    border-radius: 16px;
+    font-family: Poppins-Medium;
+    padding: 12px 25px;
+    color: white;
+    overflow: hidden;
+    z-index: 1;
+    box-shadow: 0 4px 10px rgba(144, 114, 232, 0.3);
+}
+.btn-dark::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(0deg, #d581ff, #9072e8);
+    border-radius: 16px;
+    z-index: -1;
 }
