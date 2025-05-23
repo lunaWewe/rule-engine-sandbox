@@ -13,170 +13,214 @@
 
 </head>
 <body class="bkgd">
-    <div class="container-fluid">
-        <div class="title-area">
-            <h2>風險規則引擎沙盒</h2>
-        </div>
-        <!-- Bootstrap 浮動按鈕 HTML -->
-        <button class="btn btn-primary rounded-circle position-fixed" id="scroll-button" 
-        style="bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1030;">
-        <i class="bi bi-arrow-down"></i>
-        </button>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-6">
-                    <!-- 正確的 row 和 column 結構 -->
-                    <div class="row">
-                        <!-- Available rules -->
-                        <div class="col-md-6">
-                            <div class="card h-100 available-rules-card rounded-5">
-                                <div class="card-body">
-                                    <h5 id="rules-title" class="card-title border-bottom pb-2" style="cursor: pointer;" onclick="RuleManager.handleTitleClick()">可用規則</h5>
-                                    <div class="mb-3">
-                                        <div id="button-group" class="btn-group w-100 mb-3" style="display: none;">
-                                            <button id="default-btn" class="btn btn-outline-primary active" onclick="RuleManager.applyDefaultRules()">預設決策</button>
-                                            <button id="custom-btn" class="btn btn-outline-primary" onclick="RuleManager.clearRules()">自訂決策</button>
-                                        </div>
-                                    </div>
-                                    <div id="available-rules" class="rules-panel"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Policy selection -->
-                        <div class="col-md-6">
-                            <div class="card rounded-5 h-100">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h5 class="card-title mb-0">決策配置</h5>
-                                        <div class="d-flex align-items-center">
-                                            <label for="risk-level" class="form-label me-2 mb-0">預設決策：</label>
-                                            <select class="form-select form-select-sm" style="width: auto;" id="risk-level">
-                                                <option value="low">低風險</option>
-                                                <option value="medium" selected>中風險</option>
-                                                <option value="high">高風險</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div id="execution-zone" class="drop-zone rules-panel" ondragover="RuleManager.allowDrop(event)" ondrop="RuleManager.drop(event)">
-                                        <div class="drop-zone-placeholder" id="zone-placeholder">
-                                            <div>拖放規則到此處</div>
-                                            <small>從左側拖曳規則到此區域</small>
-                                        </div>
-                                        <div class="drop-indicator" id="drop-indicator"></div>
-                                    </div>
-                                    <button class="btn btn-dark w-100" onclick="RuleManager.executeRules()">
-                                        <i class="fas fa-play me-2"></i>執行規則
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-    
-                    <!-- 新的 row 用於 Description area -->
-                    <div class="row mt-3">
-                        <!-- Description area -->
-                        <div class="col-md-12">
-                            <div class="card rounded-5 ">
-                                <div class="card-body">
-                                    <div class="description-area" id="description-area">
-                                        <div class="d-flex align-items-start">
-                                            <i class="fas fa-info-circle me-2 text-primary mt-1"></i>
-                                            <p class="mb-0" id="rule-description">將游標懸停在規則上可查看詳細描述。規則順序決定風險評估優先級。</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Transaction Table -->
-                <div class="col-md-6">
-                    <div class="card rounded-5 ">
-                        <div class="card-body">
-                            <div class="table-responsive fixed-width-container">
-                                <table class="table transaction-table">
-                                    <thead>
-                                        <tr>
-                                            <th>狀態</th>
-                                            <th>卡號</th>
-                                            <th>時間</th>
-                                            <th>國家</th>
-                                            <th class="text-end">金額</th>
-                                            <th class="text-end">設備風險</th>
-                                            <th>命中規則</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="transaction-table"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-     
-        
-        <!-- Charts -->
-        <div class="row m-0">
-            <div class="container-fluid">
-                <div class="card rounded-5 mt-3 p-0">
-                    <div class="card-body">
-                        <!-- <h5 class="card-title mb-3">交易地區分佈</h5> -->
-                        <div id="world-map" style="height: 400px; width: 100%;"></div>
-                    </div>
-                </div>
-
-            </div>
-            <div class="container-fluid">
-                <div class="row mt-3">
-                    <!-- 圓餅圖 - 左側1/4 -->
-                    <div class="col-md-3 ">
-                      <div class=" card rounded-5 h-100">
-                        <div class="card-body">
-                          <!-- <h5 class="card-title mb-3">交易風險分佈</h5> -->
-                          <div id="risk-pie-chart" style="height: 350px; width: 100%;"></div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- 柱狀圖 - 右側3/4 -->
-                    <div class="col-md-9">
-                      <div class=" card rounded-5 h-100">
-                        <div class="card-body">
-                          <!-- <h5 class="card-title mb-3">交易風險時間分佈</h5> -->
-                          <div id="hourly-risk-chart" style="height: 350px; width: 100%;"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-            </div>
-           
-        </div>
+<div class="container-fluid">
+    <div class="title-area">
+        <h2>風險規則引擎沙盒</h2>
     </div>
-    <script>
-        // 工具函數模塊
-        const Utils = {
-            getRandomTime(minHoursAgo = 0, maxHoursAgo = 48) {
-                const now = new Date();
-                const hoursAgo = Math.random() * (maxHoursAgo - minHoursAgo) + minHoursAgo;
-                return new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
-            },
+    <!-- Bootstrap 浮動按鈕 HTML -->
+    <button class="btn btn-primary rounded-circle position-fixed" id="scroll-button"
+            style="bottom: 30px; right: 30px; width: 60px; height: 60px; z-index: 1030;">
+        <i class="bi bi-arrow-down"></i>
+    </button>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="row">
+                    <!-- Available rules -->
+                    <div class="col-md-6">
+                        <div class="card h-100 available-rules-card rounded-5">
+                            <div class="card-body">
+                                <h5 id="rules-title" class="card-title border-bottom pb-2" style="cursor: pointer;" onclick="RuleManager.handleTitleClick()">可用規則</h5>
+                                <div class="mb-3">
+                                    <div id="button-group" class="btn-group w-100 mb-3" style="display: none;">
+                                        <button id="default-btn" class="btn btn-outline-primary active" onclick="RuleManager.applyDefaultRules()">預設決策</button>
+                                        <button id="custom-btn" class="btn btn-outline-primary" onclick="RuleManager.clearRules()">自訂決策</button>
+                                    </div>
+                                </div>
+                                <div id="available-rules" class="rules-panel"></div>
+                            </div>
+                        </div>
+                    </div>
 
-            formatDateTime(date) {
-                return date.toLocaleString('zh-TW', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                });
-            },
+                    <!-- Policy selection -->
+                    <div class="col-md-6">
+                        <div class="card h-100 available-rules-card rounded-5">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title mb-0">決策配置</h5>
+                                    <div class="d-flex align-items-center">
+                                        <label for="risk-level" class="form-label me-2 mb-0">預設決策：</label>
+                                        <select class="form-select form-select-sm" style="width: auto;" id="risk-level">
+                                            <option value="low" >低風險</option>
+                                            <option value="medium" selected>中風險</option>
+                                            <option value="high">高風險</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="execution-zone" class="drop-zone rules-panel" ondragover="RuleManager.allowDrop(event)" ondrop="RuleManager.drop(event)">
+                                    <div class="drop-zone-placeholder" id="zone-placeholder">
+                                        <div>拖放規則到此處</div>
+                                        <small>從左側拖曳規則到此區域</small>
+                                    </div>
+                                    <div class="drop-indicator" id="drop-indicator"></div>
+                                </div>
+                                <button class="btn btn-dark w-100" onclick="RuleManager.executeRules()">
+                                    <i class="fas fa-play me-2"></i>執行規則
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 新的 row 用於 Description area -->
+                <div class="row mt-3">
+                    <!-- Description area -->
+                    <div class="col-md-12">
+                        <div class="card rounded-5 ">
+                            <div class="card-body">
+                                <div class="description-area" id="description-area">
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-info-circle me-2 text-primary mt-1"></i>
+                                        <p class="mb-0" id="rule-description">將游標懸停在規則上可查看詳細描述。規則順序決定風險評估優先級。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 新增調試日誌區域 -->
+<!--            <div class="row mt-3">-->
+<!--                <div class="col-md-12">-->
+<!--                    <div class="card rounded-5">-->
+<!--                        <div class="card-body">-->
+<!--                            <h5 class="card-title">調試日誌</h5>-->
+<!--                            <div class="form-check mb-2">-->
+<!--                                <input class="form-check-input" type="checkbox" value="" id="enable-debug" checked>-->
+<!--                                <label class="form-check-label" for="enable-debug">-->
+<!--                                    啟用詳細調試日誌-->
+<!--                                </label>-->
+<!--                            </div>-->
+<!--                            <div id="debug-log" style="height: 200px; overflow-y: auto; background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; font-family: monospace; font-size: 12px;"></div>-->
+<!--                            <button class="btn btn-sm btn-secondary mt-2" onclick="clearDebugLog()">清除日誌</button>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+
+            <!-- Transaction Table -->
+            <div class="col-md-6">
+                <div class="card rounded-5 ">
+                    <div class="card-body">
+                        <div class="table-responsive fixed-width-container">
+                            <table class="table transaction-table">
+                                <thead>
+                                <tr>
+                                    <th>狀態</th>
+                                    <th>卡號</th>
+                                    <th>時間</th>
+                                    <th>地區</th>
+                                    <th class="text-end">金額</th>
+                                    <th class="text-end">設備風險</th>
+                                    <th>命中規則</th>
+                                </tr>
+                                </thead>
+                                <tbody id="transaction-table"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Charts -->
+    <div class="row m-0">
+        <div class="container-fluid">
+            <div class="card rounded-5 mt-3 p-0">
+                <div class="card-body">
+                    <!-- <h5 class="card-title mb-3">交易地區分佈</h5> -->
+                    <div id="world-map" style="height: 400px; width: 100%;"></div>
+                </div>
+            </div>
+
+        </div>
+        <div class="container-fluid">
+            <div class="row mt-3">
+                <!-- 圓餅圖 - 左側1/4 -->
+                <div class="col-md-3 ">
+                    <div class=" card rounded-5 h-100">
+                        <div class="card-body">
+                            <!-- <h5 class="card-title mb-3">交易風險分佈</h5> -->
+                            <div id="risk-pie-chart" style="height: 350px; width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 柱狀圖 - 右側3/4 -->
+                <div class="col-md-9">
+                    <div class=" card rounded-5 h-100">
+                        <div class="card-body">
+                            <!-- <h5 class="card-title mb-3">交易風險時間分佈</h5> -->
+                            <div id="hourly-risk-chart" style="height: 350px; width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<script>
+    // 調試日誌函數
+    function debugLog(message, level = 'info') {
+        const enableDebug = document.getElementById('enable-debug')?.checked;
+        if (!enableDebug) return;
+
+        const logPanel = document.getElementById('debug-log');
+        if (!logPanel) return;
+
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.style.marginBottom = '2px';
+        logEntry.style.color = level === 'error' ? 'red' : level === 'warning' ? 'orange' : level === 'success' ? 'green' : 'black';
+        logEntry.innerHTML = `[${timestamp}] ${message}`;
+        logPanel.appendChild(logEntry);
+        logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    function clearDebugLog() {
+        const logPanel = document.getElementById('debug-log');
+        if (logPanel) logPanel.innerHTML = '';
+    }
+
+    // 工具函數模塊
+    const Utils = {
+        getRandomTime(minHoursAgo = 0, maxHoursAgo = 48) {
+            const now = new Date();
+            const hoursAgo = Math.random() * (maxHoursAgo - minHoursAgo) + minHoursAgo;
+            return new Date(now.getTime() - hoursAgo * 60 * 60 * 1000);
+        },
+
+        formatDateTime(date) {
+            const dateObj = typeof date === 'string' ? new Date(date) : date;
+            if (!(dateObj instanceof Date) || isNaN(dateObj)) {
+                console.warn('Invalid date:', date);
+                return 'Invalid Date';
+            }
+            return dateObj.toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).replace(/\//g, '-');
+        },
 
             isWithin24Hours(timestamp) {
                 const now = new Date();
@@ -223,42 +267,10 @@
 
         // 數據定義
         const Data = {
-            countryMap: {
-                '344': '中國', '408': '朝鮮', '702': '新加坡', '840': '美國', '156': '中國', '392': '日本',
-                '124': '加拿大', '276': '德國', '826': '英國', '036': '澳洲', '250': '法國', '356': '印度',
-                '360': '印尼', '410': '南韓', '458': '馬來西亞', '484': '墨西哥', '643': '俄羅斯', '764': '泰國',
-                '704': '越南', '158': '臺灣', '496': '蒙古', '608': '菲律賓', '418': '寮國', '104': '緬甸',
-                '116': '柬埔寨', '096': '汶萊', '398': '哈薩克', '795': '土庫曼', '860': '烏茲別克',
-                '762': '塔吉克', '417': '吉爾吉斯', '051': '亞美尼亞', '031': '亞塞拜然', '268': '喬治亞',
-                '368': '伊拉克', '364': '伊朗', '682': '沙烏地阿拉伯', '784': '阿拉伯聯合大公國', '634': '卡達',
-                '414': '科威特', '512': '阿曼', '887': '葉門', '760': '敘利亞', '422': '黎巴嫩', '400': '約旦',
-                '376': '以色列', '586': '巴基斯坦', '004': '阿富汗', '050': '孟加拉', '144': '斯里蘭卡',
-                '524': '尼泊爾', '064': '不丹', '462': '馬爾地夫', '203': '捷克', '348': '匈牙利', '616': '波蘭',
-                '040': '奧地利', '380': '義大利', '756': '瑞士', '724': '西班牙', '620': '葡萄牙', '056': '比利時',
-                '528': '荷蘭', '578': '挪威', '752': '瑞典', '246': '芬蘭', '208': '丹麥', '372': '愛爾蘭',
-                '300': '希臘', '642': '羅馬尼亞', '100': '保加利亞', '688': '塞爾維亞', '191': '克羅埃西亞',
-                '705': '斯洛維尼亞', '703': '斯洛伐克', '440': '立陶宛', '428': '拉脫維亞', '233': '愛沙尼亞',
-                '498': '摩爾多瓦', '804': '烏克蘭', '112': '白俄羅斯', '710': '南非', '404': '肯亞',
-                '231': '衣索比亞', '818': '埃及', '504': '摩洛哥', '788': '突尼西亞', '012': '阿爾及利亞',
-                '288': '迦納', '566': '奈及利亞', '180': '剛果', '024': '安哥拉', '716': '辛巴威', '516': '納米比亞',
-                '072': '波札那', '748': '史瓦濟蘭', '508': '莫三比克', '894': '尚比亞', '834': '坦尚尼亞',
-                '800': '烏干達', '450': '馬達加斯加', '480': '模里西斯', '175': '馬約特', '638': '留尼旺',
-                '732': '西撒哈拉', '466': '馬利', '562': '尼日', '148': '查德', '204': '貝南', '768': '多哥',
-                '270': '甘比亞', '324': '幾內亞', '430': '賴比瑞亞', '384': '象牙海岸', '854': '布吉納法索',
-                '729': '蘇丹', '728': '南蘇丹', '686': '塞內加爾', '478': '茅利塔尼亞', '831': '格瑞那達',
-                '032': '阿根廷', '076': '巴西', '170': '哥倫比亞', '604': '秘魯', '152': '智利', '862': '委內瑞拉',
-                '218': '厄瓜多', '068': '玻利維亞', '600': '巴拉圭', '858': '烏拉圭', '328': '蓋亞那',
-                '740': '蘇利南', '238': '福克蘭群島', '320': '瓜地馬拉', '591': '巴拿馬', '188': '哥斯大黎加',
-                '340': '宏都拉斯', '222': '薩爾瓦多', '558': '尼加拉瓜', '084': '貝里斯', '192': '古巴',
-                '332': '海地', '214': '多明尼加', '388': '牙買加', '052': '巴巴多斯', '028': '安地卡及巴布達',
-                '044': '巴哈馬', '780': '千里達', '010': '南極洲', '744': '亞速爾群島', '474': '馬提尼克',
-                '312': '瓜德羅普', '660': '安圭拉', '254': '法屬圭亞那', '500': '蒙特塞拉特', '654': '聖赫勒拿',
-                '090': '所羅門群島', '548': '萬那杜', '242': '斐濟', '316': '關島', '583': '密克羅尼西亞',
-                '580': '北馬里亞納', '585': '帛琉', '016': '美屬薩摩亞', '882': '薩摩亞', '296': '吉里巴斯',
-                '776': '東加', '570': '紐埃', '612': '皮特肯群島', '162': '聖誕島', '334': '赫德島和麥克唐納群島',
-                '574': '諾福克島', '520': '瑙魯', '798': '吐瓦魯', '136': '開曼群島', '796': '特克斯和凱科斯群島',
-                '092': '英屬維京群島', '772': '托克勞', '876': '瓦利斯和富圖納', '184': '庫克群島',
-                '258': '法屬波利尼西亞', '540': '新喀里多尼亞'
+             countryMap: {
+                '158': '臺灣', '156': '中國', '408': '朝鮮', '004': '阿富汗', '116': '柬埔寨',
+                '840': '美國', '392': '日本', '702': '新加坡', '276': '德國', '250': '法國',
+                '036': '澳洲', '826': '英國'
             },
 
             countryEChartsMap: {
@@ -283,63 +295,313 @@
                 '862': 'Venezuela', '218': 'Ecuador', '068': 'Bolivia', '600': 'Paraguay', '858': 'Uruguay'
             },
 
+
             rules: [
-                { id: '1', text: '小金額且設備低風險', level: 'success', description: '交易金額低於500元且來自已知安全設備，可自動通過',
-                  condition: tx => tx.amount < 500 && tx.deviceRisk > 0.2, action: 'APPROVE' },
-                { id: '2', text: '1天內驗證成功，累積金額小於$1000', level: 'success', description: '用戶在過去24小時內已經完成驗證，且累積交易金額低於1000元',
-                  condition: tx => tx.isVerified && tx.cumulativeAmount < 1000 && Utils.isWithin24Hours(tx.timestamp), action: 'APPROVE' },
-                { id: '3', text: '設備中風險', level: 'warning', description: '使用者的設備風險評分在0至0.5之間，建議額外監控',
-                  condition: tx => tx.deviceRisk >= 0 && tx.deviceRisk <= 0.5, action: 'REVIEW' },
+                { id: '1', text: '小金額且設備低風險', level: 'success', description: '交易金額低於300元且來自已知安全設備，可自動通過',
+                  condition: tx => tx.amount < 300 && tx.deviceRisk > 0.3, action: 'APPROVE' },
+
+                // 修正後的規則2
+                {
+                    id: '2',
+                    text: '前24小時低風險交易，總金額小於$1000',
+                    level: 'success',
+                    description: '當前交易時間往前推算24小時內，同一卡號的交易（包括當前交易）總金額低於1000元，且其中有至少一筆低風險交易通過',
+                    condition: (tx, allTransactions) => {
+                        debugLog(`[規則2] 處理交易: 卡號=${tx.card.substring(0,8)}****, 金額=${tx.amount}, 時間=${Utils.formatDateTime(tx.timestamp)}`);
+
+                        const txTime = new Date(tx.timestamp);
+                        const startTime = new Date(txTime.getTime() - 24 * 60 * 60 * 1000); // 往前推算24小時
+
+                        debugLog(`[規則2] 時間範圍: ${Utils.formatDateTime(startTime)} ~ ${Utils.formatDateTime(txTime)}`);
+
+                        // 篩選當前交易時間往前24小時內的同卡號交易（包括當前交易）
+                        const recentTxs = allTransactions
+                            .filter(t => {
+                                const isCurrentCard = t.card === tx.card;
+                                const tTime = new Date(t.timestamp);
+                                const inTimeRange = tTime >= startTime && tTime <= txTime;
+                                const hasAction = t.action !== undefined; // 確保交易已處理
+
+                                if (isCurrentCard && inTimeRange) {
+                                    debugLog(`[規則2] 找到相關交易: ID=${t.id}, 金額=${t.amount}, 時間=${Utils.formatDateTime(t.timestamp)}, 動作=${t.action || '未處理'}`);
+                                }
+
+                                return isCurrentCard && inTimeRange;
+                            });
+
+                        // 檢查當前交易是否已經包含在列表中
+                        const currentTxIncluded = recentTxs.some(t => t.id === tx.id);
+                        if (!currentTxIncluded) {
+                            debugLog(`[規則2] 當前交易(ID=${tx.id})不在篩選結果中，需要額外計入當前交易金額`);
+                        }
+
+                        debugLog(`[規則2] 找到 ${recentTxs.length} 筆相關交易${currentTxIncluded ? '（含當前交易）' : '（不含當前交易）'}`);
+
+                        // 檢查是否有低風險交易（APPROVE）- 排除當前交易
+                        // const priorAcceptableTxs = recentTxs.filter(t => t.id !== tx.id && t.action === 'APPROVE');
+                        const priorAcceptableTxs = recentTxs.filter(t => t.id !== tx.id && (t.action === 'APPROVE' || t.action === 'REVIEW'));
+
+                        const hasLowRiskPriorTx = priorAcceptableTxs.length > 0;
+
+                        debugLog(`[規則2] 前期低風險交易數: ${priorAcceptableTxs.length}`, hasLowRiskPriorTx ? 'success' : 'warning');
+
+                        // 計算總金額（確保包括當前交易）
+                        let totalAmount = recentTxs.reduce((sum, t) => sum + t.amount, 0);
+                        if (!currentTxIncluded) {
+                            totalAmount += tx.amount;
+                            debugLog(`[規則2] 加入當前交易金額 ${tx.amount}，調整後總金額: ${totalAmount}`);
+                        }
+                        // 最終決策
+                        const result = hasLowRiskPriorTx && totalAmount < 1000;
+                        debugLog(`[規則2] 結果: ${result ? '通過' : '不通過'} (有前期低風險: ${hasLowRiskPriorTx}, 總金額 < 1000: ${totalAmount < 1000})`, result ? 'success' : 'error');
+
+                        if (result) {
+                            debugLog(`[規則2] 交易 ${tx.card.substring(0,8)}**** 命中規則 #2: 前24小時總金額 ${totalAmount}, 低風險交易數 ${priorAcceptableTxs.length}`, 'success');
+                        }
+
+                        return result;
+                    },
+                    action: 'APPROVE'
+                },
+
+                { id: '3', text: '設備中風險', level: 'warning', description: '使用者的設備風險評分在-0.3至0.3之間，建議額外監控',
+                        condition: tx => tx.deviceRisk >= -0.3 && tx.deviceRisk <= 0.3, action: 'REVIEW' },
                 { id: '4', text: '中高金額', level: 'warning', description: '單筆交易金額超過300元，需要額外審核',
-                  condition: tx => tx.amount > 300, action: 'REVIEW' },
-                { id: '5', text: '中高金額且來自高風險國家', level: 'danger', description: '交易金額超過500元且來源IP位於高風險國家',
-                  condition: tx => tx.amount > 500 && ['408', '804'].includes(tx.countryCode), action: 'BLOCK' },
-                { id: '6', text: '設備高風險', level: 'danger', description: '設備風險評分為負數，可能表示有異常活動',
-                  condition: tx => tx.deviceRisk < 0, action: 'BLOCK' },
-                { id: '7', text: '15分鐘內來自不同國家', level: 'danger', description: '同一卡號在15分鐘內從不同國家發起交易',
-                  condition: tx => Utils.hasMultipleCountriesIn15Min(tx, TransactionManager.transactions), action: 'BLOCK' }
-                
+                  condition: tx => tx.amount > 1500, action: 'REVIEW' },
+                { id: '5', text: '中高金額且來自高風險地區', level: 'danger', description: '交易金額超過1500元且來源IP位於高風險地區',
+                  condition: tx => tx.amount > 300 && ['004', '116','408'].includes(tx.countryCode), action: 'BLOCK' },
+                { id: '6', text: '設備高風險', level: 'danger', description: '設備風險評分小於-0.3，可能表示有異常活動',
+                  condition: tx => tx.deviceRisk < -0.3, action: 'BLOCK' },
+                { id: '7', text: '15分鐘內來自不同地區', level: 'danger', description: '同一卡號在15分鐘內從不同地區發起交易',
+                condition: (tx, allTransactions) => {
+                    const previousTx = allTransactions
+                        .filter(t => t.card === tx.card && new Date(t.timestamp) < new Date(tx.timestamp))
+                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+                    return previousTx && Math.abs(new Date(tx.timestamp) - new Date(previousTx.timestamp)) / (1000 * 60) <= 15
+                        && previousTx.countryCode !== tx.countryCode;
+                }, action: 'BLOCK' }
+
             ],
 
-            defaultRuleIds: ['7', '5', '6', '4', '3']
+            defaultRuleIds: ['2', '7', '5', '6', '4', '3', '1']
         };
         // 交易管理模塊
         const TransactionManager = {
             transactions: [],
 
+            async loadOrGenerateTransactions(count = 200, filePath = './data1.json') {
+                try {
+                    const response = await fetch(filePath);
+                    if (!response.ok) {
+                        throw new Error ('file is not exist or can not read')
+                    }
+
+                    const data = await response.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        this.transactions = data;
+
+                    } else {
+                        this.transactions = this.generateTransactions(count);
+                    }
+                } catch (error) {
+                    this.transactions = this.generateTransactions(count);
+                }
+
+                // 記錄地區分佈統計
+                const countryStats = new Map();
+                    this.transactions.forEach(tx => {
+                        countryStats.set(tx.countryCode, (countryStats.get(tx.countryCode) || 0) + 1);
+                    });
+                    Utils.addLog(`交易生成完成：共 ${this.transactions.length} 筆，涵蓋 ${countryStats.size} 個地區`);
+                    const topCountries = Array.from(countryStats.entries())
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .map(([code, count]) => `${Data.countryMap[code] || code}: ${count} 筆`)
+                        .join(', ');
+                    Utils.addLog(`交易最多的前5個地區: ${topCountries}`);
+
+                    this.transactions.forEach(tx => {
+                        if (tx.card.length !== 16) {
+                            Utils.addLog(`Invalid card length for transaction ${tx.id}: ${tx.card}`);
+                        }
+                    });
+                this.loadTransactions();
+                console.log(this.transactions);
+                return this.transactions;
+            },
+
             generateTransactions(count = 200) {
                 this.transactions = [];
                 const countryCodes = Object.keys(Data.countryMap).concat('158');
-                const deviceRiskLevels = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+                const deviceRiskLevels = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
                 const bankCardPrefixes = ['4', '5', '3', '6'];
                 const amountRanges = [
                     { min: 10, max: 300 }, { min: 301, max: 800 },
-                    { min: 801, max: 2000 }, { min: 2001, max: 10000 }
+                    { min: 801, max: 2000 }, { min: 2001, max: 5000 }
                 ];
 
-                // 生成跨國卡號
-                const crossBorderCards = Array.from({ length: 20 }, () => {
-                    const prefix = bankCardPrefixes[Math.floor(Math.random() * bankCardPrefixes.length)];
-                    const randomDigits = Math.floor(100000000000000 + Math.random() * 900000000000000).toString().padStart(15, '0');
-                    return prefix + randomDigits;
-                });
+                // 規則命中機率
+                const ruleProbabilities = {
+                    '1': 0.05, // 低風險，10% / 2
+                    '2': 0.05, // 低風險，10% / 2
+                    '3': 0.10, // 中風險，20% / 2
+                    '4': 0.10, // 中風險，20% / 2
+                    '5': 0.0167, // 高風險，5% / 3
+                    '6': 0.005, // 高風險，5% / 3
+                    '7': 0.0166, // 高風險，5% / 3
+                    'none': 0.67 // 未命中規則
+                };
 
-                // 生成主要交易
+                // 儲存卡號與其交易歷史的映射，用於規則2和規則7
+                const cardTransactionMap = new Map();
+                // 追蹤規則2和規則 мови7的命中索引
+                const rule2or7Indices = [];
+
+                // 輔助函數：根據機率選擇目標規則
+                function chooseTargetRule(currentIndex) {
+                    // 檢查與最近的規則2或7命中交易的間隔
+                    if (rule2or7Indices.length > 0) {
+                        const lastRule2or7Index = rule2or7Indices[rule2or7Indices.length - 1];
+                        const gap = currentIndex - lastRule2or7Index;
+                        if (gap < 3) {
+                            // 間隔小於3，禁止命中規則2或7
+                            const adjustedProbs = { ...ruleProbabilities, '2': 0, '7': 0 };
+                            let total = Object.values(adjustedProbs).reduce((sum, p) => sum + p, 0);
+                            for (let key in adjustedProbs) {
+                                adjustedProbs[key] /= total; // 重新正規化機率
+                            }
+                            const rand = Math.random();
+                            let cumulative = 0;
+                            for (const [ruleId, prob] of Object.entries(adjustedProbs)) {
+                                cumulative += prob;
+                                if (rand < cumulative) return ruleId;
+                            }
+                        } else if (gap >= 3 && gap <= 7) {
+                            // 間隔在3到7之間，允許命中規則2或7
+                            const rand = Math.random();
+                            let cumulative = 0;
+                            for (const [ruleId, prob] of Object.entries(ruleProbabilities)) {
+                                cumulative += prob;
+                                if (rand < cumulative) return ruleId;
+                            }
+                        } else {
+                            // 間隔超過7，強制命中規則2或7
+                            const forcedRules = { '2': 0.5, '7': 0.5 };
+                            const rand = Math.random();
+                            let cumulative = 0;
+                            for (const [ruleId, prob] of Object.entries(forcedRules)) {
+                                cumulative += prob;
+                                if (rand < cumulative) return ruleId;
+                            }
+                        }
+                    } else {
+                        // 尚未有規則2或7命中，按正常機率選擇
+                        const rand = Math.random();
+                        let cumulative = 0;
+                        for (const [ruleId, prob] of Object.entries(ruleProbabilities)) {
+                            cumulative += prob;
+                            if (rand < cumulative) return ruleId;
+                        }
+                    }
+                    return 'none'; // 默認未命中
+                }
+
+                // 輔助函數：生成符合特定規則的交易
+                function generateTransactionForRule(ruleId, card, timestamp, prevTxs) {
+                    let amount, countryCode, deviceRisk, isVerified, cumulativeAmount;
+
+                    switch (ruleId) {
+                        case '1':
+                            // 小金額且設備低風險
+                            amount = Math.floor(Math.random() * (300 - 10 + 1)) + 10;
+                            deviceRisk = deviceRiskLevels.filter(r => r > 0.3)[Math.floor(Math.random() * deviceRiskLevels.filter(r => r > 0.3).length)];
+                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                            isVerified = Math.random() < 0.75;
+                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
+                            break;
+                        case '2':
+                            // 前24小時低風險交易，總金額小於$1000
+                            amount = Math.floor(Math.random() * (500 - 10 + 1)) + 10;
+                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
+                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                            isVerified = true;
+                            // 確保卡號有前期低風險交易
+                            const prevTx = prevTxs.find(t => t.card === card && t.action === 'APPROVE');
+                            cumulativeAmount = prevTx ? prevTx.cumulativeAmount + amount : amount;
+                            if (cumulativeAmount >= 1000) cumulativeAmount = 999; // 確保總金額<1000
+                            break;
+                        case '3':
+                            // 設備中風險
+                            amount = Math.floor(Math.random() * (5000 - 10 + 1)) + 10;
+                            deviceRisk = deviceRiskLevels.filter(r => r >= -0.3 && r < 0.3)[Math.floor(Math.random() * deviceRiskLevels.filter(r => r >= -0.3 && r < 0.3).length)];
+                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                            isVerified = Math.random() < 0.75;
+                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
+                            break;
+                        case '4':
+                            // 中高金額
+                            amount = Math.floor(Math.random() * (5000 - 301 + 1)) + 301;
+                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
+                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                            isVerified = Math.random() < 0.75;
+                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
+                            break;
+                        case '5':
+                            // 中高金額且來自高風險地區
+                            amount = Math.floor(Math.random() * (5000 - 301 + 1)) + 301;
+                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
+                            countryCode = ['004', '116', '408'][Math.floor(Math.random() * 3)];
+                            isVerified = Math.random() < 0.75;
+                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
+                            break;
+                        case '6':
+                            // 設備高風險
+                            amount = Math.floor(Math.random() * (5000 - 10 + 1)) + 10;
+                            deviceRisk = deviceRiskLevels.filter(r => r < -0.3)[Math.floor(Math.random() * deviceRiskLevels.filter(r => r < -0.3).length)];
+                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                            isVerified = Math.random() < 0.75;
+                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
+                            break;
+                        case '7':
+                            // 15分鐘內來自不同地區
+                            amount = Math.floor(Math.random() * (5000 - 10 + 1)) + 10;
+                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
+                            const prevTxFor7 = prevTxs.find(t => t.card === card);
+                            countryCode = prevTxFor7 ? countryCodes.filter(c => c !== prevTxFor7.countryCode)[Math.floor(Math.random() * (countryCodes.length - 1))] : countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                            isVerified = Math.random() < 0.75;
+                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
+                            break;
+                        default:
+                            // 未命中任何規則
+                            amount = Math.floor(Math.random() * (5000 - 10 + 1)) + 10;
+                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
+                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                            isVerified = Math.random() < 0.75;
+                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
+                            break;
+                    }
+
+                    return { amount, countryCode, deviceRisk, isVerified, cumulativeAmount };
+                }
+
+                // 生成交易
                 for (let i = 0; i < count; i++) {
-                    const isCrossBorder = Math.random() < 0.15;
-                    const card = isCrossBorder
-                        ? crossBorderCards[Math.floor(Math.random() * crossBorderCards.length)]
-                        : bankCardPrefixes[Math.floor(Math.random() * bankCardPrefixes.length)] +
-                          Math.floor(100000000000000 + Math.random() * 900000000000000).toString().padStart(15, '0');
+                    const card = bankCardPrefixes[Math.floor(Math.random() * bankCardPrefixes.length)] +
+                        Math.floor(100000000000000 + Math.random() * 900000000000000).toString().padStart(15, '0');
+                    const timestamp = Utils.getRandomTime();
 
-                    const amountRange = amountRanges[Math.floor(Math.random() * amountRanges.length)];
-                    const amount = Math.floor(Math.random() * (amountRange.max - amountRange.min + 1)) + amountRange.min;
-                    const countryCode = Math.random() < 0.05 ? '158' : Utils.shuffleArray([...countryCodes])[Math.floor(Math.random() * countryCodes.length)];
-                    const deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
-                    const isVerified = Math.random() < 0.75;
-                    const cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
+                    // 獲取該卡號的歷史交易
+                    let prevTxs = cardTransactionMap.get(card) || [];
+                    // 選擇目標規則
+                    const targetRule = chooseTargetRule(i);
+                    if (targetRule === '2' || targetRule === '7') {
+                        rule2or7Indices.push(i);
+                    }
 
-                    this.transactions.push({
+                    // 生成交易屬性
+                    const { amount, countryCode, deviceRisk, isVerified, cumulativeAmount } = generateTransactionForRule(targetRule, card, timestamp, prevTxs);
+
+                    const tx = {
                         id: i + 1,
                         card,
                         countryCode,
@@ -347,31 +609,57 @@
                         deviceRisk,
                         isVerified,
                         cumulativeAmount,
-                        timestamp: Utils.getRandomTime()
-                    });
+                        timestamp,
+                        targetRule
+                    };
+
+                    // 更新卡號的交易歷史
+                    prevTxs.push(tx);
+                    cardTransactionMap.set(card, prevTxs);
+
+                    this.transactions.push(tx);
                 }
 
-                // 添加跨國交易
-                for (const card of crossBorderCards) {
-                    const cardTxs = this.transactions.filter(tx => tx.card === card);
-                    if (cardTxs.length) {
-                        const baseTx = cardTxs[0];
-                        const newTime = new Date(new Date(baseTx.timestamp).getTime() + Math.random() * 55 * 60 * 1000);
-                        const availableCountries = Utils.shuffleArray(countryCodes.filter(c => c !== baseTx.countryCode));
-                        const newCountryCode = baseTx.countryCode !== '158' && Math.random() < 0.2
-                            ? '158'
-                            : availableCountries[Math.floor(Math.random() * availableCountries.length)] || countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                // 為規則2和規則7添加必要的上下文交易
+                for (let i = 0; i < this.transactions.length; i++) {
+                    const tx = this.transactions[i];
+                    const prevTxs = cardTransactionMap.get(tx.card) || [];
+                    const prevTxsBefore = prevTxs.filter(t => new Date(t.timestamp) < new Date(tx.timestamp));
 
-                        this.transactions.push({
+                    if (tx.targetRule === '2' && !prevTxsBefore.some(t => t.action === 'APPROVE')) {
+                        // 添加一筆低風險交易
+                        const prevTime = new Date(tx.timestamp.getTime() - Math.random() * 24 * 60 * 60 * 1000);
+                        const prevTx = {
                             id: this.transactions.length + 1,
-                            card,
-                            countryCode: newCountryCode,
-                            amount: Math.floor(Math.random() * 1000) + 100,
-                            deviceRisk: baseTx.deviceRisk,
-                            isVerified: baseTx.isVerified,
-                            cumulativeAmount: baseTx.cumulativeAmount + Math.floor(Math.random() * 500),
-                            timestamp: newTime
-                        });
+                            card: tx.card,
+                            countryCode: tx.countryCode,
+                            amount: Math.floor(Math.random() * (300 - 10 + 1)) + 10,
+                            deviceRisk: deviceRiskLevels.filter(r => r > 0.3)[Math.floor(Math.random() * deviceRiskLevels.filter(r => r > 0.3).length)],
+                            isVerified: true,
+                            cumulativeAmount: tx.cumulativeAmount - tx.amount,
+                            timestamp: prevTime,
+                            action: 'APPROVE'
+                        };
+                        this.transactions.push(prevTx);
+                        prevTxs.push(prevTx);
+                        cardTransactionMap.set(tx.card, prevTxs);
+                    } else if (tx.targetRule === '7' && !prevTxsBefore.some(t => Math.abs(new Date(tx.timestamp) - new Date(t.timestamp)) / (1000 * 60) <= 15 && t.countryCode !== tx.countryCode)) {
+                        // 添加一筆不同地區的交易
+                        const prevTime = new Date(tx.timestamp.getTime() - Math.random() * 15 * 60 * 1000);
+                        const prevCountry = countryCodes.filter(c => c !== tx.countryCode)[Math.floor(Math.random() * (countryCodes.length - 1))];
+                        const prevTx = {
+                            id: this.transactions.length + 1,
+                            card: tx.card,
+                            countryCode: prevCountry,
+                            amount: Math.floor(Math.random() * (5000 - 10 + 1)) + 10,
+                            deviceRisk: tx.deviceRisk,
+                            isVerified: tx.isVerified,
+                            cumulativeAmount: tx.cumulativeAmount - tx.amount,
+                            timestamp: prevTime
+                        };
+                        this.transactions.push(prevTx);
+                        prevTxs.push(prevTx);
+                        cardTransactionMap.set(tx.card, prevTxs);
                     }
                 }
 
@@ -397,30 +685,16 @@
                     }
                 }
 
-                // 記錄國家分佈統計
-                const countryStats = new Map();
-                this.transactions.forEach(tx => {
-                    countryStats.set(tx.countryCode, (countryStats.get(tx.countryCode) || 0) + 1);
-                });
-                Utils.addLog(`交易生成完成：共 ${this.transactions.length} 筆，涵蓋 ${countryStats.size} 個國家`);
-                const topCountries = Array.from(countryStats.entries())
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 5)
-                    .map(([code, count]) => `${Data.countryMap[code] || code}: ${count} 筆`)
-                    .join(', ');
-                Utils.addLog(`交易最多的前5個國家: ${topCountries}`);
+                // 按時間排序交易
+                this.transactions.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-                this.transactions.forEach(tx => {
-                    if (tx.card.length !== 16) {
-                        Utils.addLog(`Invalid card length for transaction ${tx.id}: ${tx.card}`);
-                    }
-                });
-                
-                console.log(this.transactions);
                 return this.transactions;
             },
 
             loadTransactions() {
+                this.transactions.sort((a, b) => {
+                    return new Date(a.timestamp) - new Date(b.timestamp);
+                });
                 const table = document.getElementById('transaction-table');
                 table.innerHTML = '';
 
@@ -499,21 +773,21 @@
                 if (event) {
                     event.stopPropagation();
                 }
-                
+
                 // 使用防抖動，確保短時間內多次調用只執行一次
                 if (this.titleClickTimer) {
                     clearTimeout(this.titleClickTimer);
                 }
-                
+
                 this.titleClickTimer = setTimeout(() => {
                     // 使用變數存儲點擊次數
                     if (!window.titleClickCount) {
                         window.titleClickCount = 0;
                     }
                     window.titleClickCount++;
-                    
+
                     console.log('標題被點擊了', window.titleClickCount, '次');
-                    
+
                     if (window.titleClickCount >= 4) {
                         const buttonGroup = document.querySelector('.btn-group.w-100.mb-3');
                         if (buttonGroup) {
@@ -605,6 +879,15 @@
             dragStart(event) {
                 event.dataTransfer.setData('text/plain', event.target.getAttribute('data-id'));
                 event.target.style.opacity = '0.4';
+
+                // 當拖曳結束時自動恢復透明度
+                const resetOpacity = () => {
+                    event.target.style.opacity = '';
+                    event.target.removeEventListener('dragend', resetOpacity);
+                    event.target.removeEventListener('drop', resetOpacity);
+                };
+                event.target.addEventListener('dragend', resetOpacity);
+                event.target.addEventListener('drop', resetOpacity);
             },
 
             allowDrop(event) {
@@ -672,7 +955,24 @@
                 const ruleId = rule.getAttribute('data-id');
                 const originalRule = Data.rules.find(r => r.id === ruleId);
                 if (originalRule) {
-                    this.addRuleToAvailable(originalRule);
+                    // 依照 Data.rules 的順序插入回 availableRules
+                    const availableRules = this.elements.availableRules;
+                    const allRuleIds = Data.rules.map(r => r.id);
+                    const insertIndex = allRuleIds.indexOf(ruleId);
+
+                    // 找到應插入的位置
+                    let inserted = false;
+                    for (let i = 0; i < availableRules.children.length; i++) {
+                        const childId = availableRules.children[i].getAttribute('data-id');
+                        if (childId && allRuleIds.indexOf(childId) > insertIndex) {
+                            availableRules.insertBefore(this.createRuleClone(originalRule), availableRules.children[i]);
+                            inserted = true;
+                            break;
+                        }
+                    }
+                    if (!inserted) {
+                        availableRules.appendChild(this.createRuleClone(originalRule));
+                    }
                     rule.remove();
                     this.updatePlaceholder();
                     this.updateButtonState();
@@ -732,54 +1032,136 @@
 
             executeRules() {
                 Utils.clearLog();
+                clearDebugLog(); // 清除調試日誌
                 this.resetTransactionStatus();
+
+                debugLog('開始執行規則引擎...', 'info');
 
                 const activeRules = Array.from(this.elements.executionZone.querySelectorAll('.rule-item'))
                     .map(r => Data.rules.find(rule => rule.id === r.getAttribute('data-id')))
                     .filter(r => r);
                 const riskLevel = document.getElementById('risk-level').value;
 
+                // 在這裡添加載入效果 - 只覆蓋視覺效果，不替換整個內容
+                const transactionPanel = document.querySelector('#transaction-table').closest('.card');
+                const loadingOverlay = document.createElement('div');
+                loadingOverlay.id = 'loading-overlay';
+                loadingOverlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255,255,255,0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    `;
+                loadingOverlay.innerHTML = `
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">正在處理交易...</p>
+    `;
+
+                transactionPanel.style.position = 'relative';
+                transactionPanel.appendChild(loadingOverlay);
+
                 Utils.addLog(`風險等級設置為: ${riskLevel}`);
+                debugLog(`啟用規則: ${activeRules.map(r => `#${r.id}`).join(', ')}`, 'info');
 
                 if (!activeRules.length) {
                     Utils.addLog(`沒有可用規則，所有交易設為${riskLevel}風險`);
-                    TransactionManager.transactions.forEach(tx => this.processTransaction(tx, [], riskLevel));
+                    TransactionManager.transactions.forEach(tx => this.processTransaction(tx, [], riskLevel, TransactionManager.transactions));
                     ChartManager.updateAll();
+
+                    // 移除載入效果
+                    setTimeout(() => {
+                        const overlay = document.getElementById('loading-overlay');
+                        if (overlay) overlay.remove();
+                    }, 500);
                     return;
                 }
 
-                const rule7Hits = new Map();
-                TransactionManager.transactions.forEach(tx => {
-                    const result = this.processTransaction(tx, activeRules, riskLevel);
-                    if (result.matchedRule?.id === '7') {
-                        rule7Hits.set(tx.countryCode, (rule7Hits.get(tx.countryCode) || 0) + 1);
-                    }
+                // 按时间顺序处理交易
+                const sortedTransactions = [...TransactionManager.transactions]
+                    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+                debugLog(`按時間順序處理 ${sortedTransactions.length} 筆交易`, 'info');
+
+                // 创建一个处理状态追踪数组
+                const processedTransactions = [];
+
+                // 重置所有交易的動作狀態
+                sortedTransactions.forEach(tx => {
+                    delete tx.action;
                 });
 
+                debugLog('開始逐筆處理交易...', 'info');
+                // 按時間順序處理交易
+                sortedTransactions.forEach((tx, index) => {
+                    debugLog(`\n處理第 ${index + 1} 筆交易 (ID: ${tx.id})`, 'info');
+
+                    // 處理當前交易時，只傳入已處理完的交易
+                    this.processTransaction(tx, activeRules, riskLevel, processedTransactions);
+
+                    // 將已處理的交易加入清單
+                    processedTransactions.push(tx);
+                });
+
+                debugLog('所有交易處理完成', 'success');
                 ChartManager.updateAll();
+
+                // 移除載入效果
+                setTimeout(() => {
+                    const overlay = document.getElementById('loading-overlay');
+                    if (overlay) overlay.remove();
+                }, 500);
             },
 
-            processTransaction(tx, activeRules, riskLevel) {
+            processTransaction(tx, activeRules, riskLevel, allTransactions) {
+                debugLog(`\n=== 處理交易 ID: ${tx.id} ===`, 'info');
+                debugLog(`卡號: ${tx.card.substring(0,8)}****, 金額: ${tx.amount}, 時間: ${Utils.formatDateTime(tx.timestamp)}`, 'info');
+
                 const row = document.querySelector(`#transaction-table tr[data-id="${tx.id}"]`);
                 const statusCell = row.querySelector('td:first-child');
                 const hitRuleCell = row.querySelector('td:last-child');
                 let action = this.getDefaultAction(riskLevel);
                 let matchedRule = null;
 
+                debugLog(`預設動作: ${action} (基於風險等級: ${riskLevel})`, 'info');
+                debugLog(`可參考的歷史交易數: ${allTransactions.length}`, 'info');
+
                 for (const rule of activeRules) {
-                    if (rule.condition(tx)) {
-                        matchedRule = rule;
-                        action = rule.action;
-                        hitRuleCell.innerHTML = `<span class="badge bg-light text-dark">#${rule.id}</span> ${rule.text}`;
-                        Utils.addLog(`交易 ${tx.card} (${Data.countryMap[tx.countryCode] || tx.countryCode}) 命中規則 #${rule.id}: ${rule.text}`);
-                        break;
+                    debugLog(`\n檢查規則 #${rule.id}: ${rule.text}`, 'info');
+                    try {
+                        const conditionMet = rule.condition.length > 1
+                            ? rule.condition(tx, allTransactions)  // 傳入所有已處理交易
+                            : rule.condition(tx);                   // 只傳入當前交易
+
+                        debugLog(`規則 #${rule.id} 結果: ${conditionMet}`, conditionMet ? 'success' : 'warning');
+
+                        if (conditionMet) {
+                            matchedRule = rule;
+                            action = rule.action;
+                            hitRuleCell.innerHTML = `<span class="badge bg-light text-dark">#${rule.id}</span> ${rule.text}`;
+                            debugLog(`🎯 交易命中規則 #${rule.id}! 動作: ${action}`, 'success');
+                            Utils.addLog(`交易 ${tx.card.substring(0,8)}**** (${Data.countryMap[tx.countryCode] || tx.countryCode}) 命中規則 #${rule.id}: ${rule.text}`);
+                            break;
+                        }
+                    } catch (error) {
+                        debugLog(`規則 #${rule.id} 執行錯誤: ${error.message}`, 'error');
+                        console.error(`規則 #${rule.id} 執行錯誤:`, error);
                     }
                 }
-
                 if (!matchedRule) {
                     hitRuleCell.textContent = '未命中任何規則';
                     Utils.addLog(`交易 ${tx.card} (${Data.countryMap[tx.countryCode] || tx.countryCode}) 未命中任何規則，採用${riskLevel}風險預設行為`);
                 }
+
+                tx.action = action;
 
                 statusCell.innerHTML = `
                     <i class="fas fa-${
@@ -788,9 +1170,9 @@
                         action === 'BLOCK' ? 'exclamation-circle text-danger' : 'question-circle text-secondary'
                     }"></i>
                 `;
-                row.classList.add('highlighted');
+                row.classList.add('highlighted');debugLog(`交易處理完成，最終動作: ${action}`, action === 'APPROVE' ? 'success' : action === 'REVIEW' ? 'warning' : 'error');
 
-                return { action, matchedRule };
+                    return { action, matchedRule };
             },
 
             getDefaultAction(riskLevel) {
@@ -943,7 +1325,7 @@
                     });
 
                     chart.hideLoading();
-                    Utils.addLog(`地圖更新完成: 顯示 ${mapData.length} 個國家的高風險交易資料`);
+                    Utils.addLog(`地圖更新完成: 顯示 ${mapData.length} 個地區的高風險交易資料`);
                 } catch (error) {
                     chart.hideLoading();
                     Utils.addLog(`地圖更新失敗: ${error.message}`);
@@ -1056,16 +1438,16 @@
         document.getElementById('scroll-button').addEventListener('click', function() {
             // 獲取目標元素
             const targetElement = document.getElementById('hourly-risk-chart');
-            
+
             // 平滑滾動到目標元素
-            targetElement.scrollIntoView({ 
-                behavior: 'smooth' 
+            targetElement.scrollIntoView({
+                behavior: 'smooth'
             });
         });
 
         // 初始化應用
         window.onload = () => {
-            TransactionManager.generateTransactions();
+            TransactionManager.loadOrGenerateTransactions();
             RuleManager.init();
         };
     </script>

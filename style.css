@@ -13,7 +13,7 @@ body, html {
 
 /* 背景配置 */
 .bkgd {
-    background-image: url('./bj2.jpg');
+    background-image: url('../bj2.jpg');
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center bottom;
@@ -340,7 +340,7 @@ tr.highlighted {
     min-width: 750px;
     border-collapse: separate;
     border-spacing: 0;
-    table-layout: fixed; 
+    table-layout: fixed;
 }
 
 .transaction-table thead th {
@@ -352,19 +352,19 @@ tr.highlighted {
     padding: 12px 15px;
     font-family: Poppins-Medium;
     border: none;
-    white-space: normal; 
-    overflow-wrap: break-word; 
-    hyphens: auto; 
+    white-space: normal;
+    overflow-wrap: break-word;
+    hyphens: auto;
 }
 
 
-.transaction-table th:nth-child(1) { width: 60px; } 
-.transaction-table th:nth-child(2) { width: 120px; } 
-.transaction-table th:nth-child(3) { width: 140px; } 
-.transaction-table th:nth-child(4) { width: 80px; } 
-.transaction-table th:nth-child(5) { width: 80px; } 
-.transaction-table th:nth-child(6) { width: 100px; } 
-.transaction-table th:nth-child(7) { width: 170px; } 
+.transaction-table th:nth-child(1) { width: 60px; }
+.transaction-table th:nth-child(2) { width: 120px; }
+.transaction-table th:nth-child(3) { width: 140px; }
+.transaction-table th:nth-child(4) { width: 80px; }
+.transaction-table th:nth-child(5) { width: 80px; }
+.transaction-table th:nth-child(6) { width: 100px; }
+.transaction-table th:nth-child(7) { width: 170px; }
 .transaction-table thead th:first-child {
     border-top-left-radius: 10px;
 }
