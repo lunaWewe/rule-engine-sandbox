@@ -122,7 +122,13 @@
                                     <th>時間</th>
                                     <th>地區</th>
                                     <th class="text-end">金額</th>
-                                    <th class="text-end">設備風險</th>
+                                    <th>MCC</th>
+                                    <th class="text-end">偽冒設備</th>
+                                    <th class="text-end">卡號異常</th>
+                                    <th class="text-end">卡號測試</th>
+                                    <th>VPN</th>
+                                    <th>Tor</th>
+                                    <th>Webdriver</th>
                                     <th>命中規則</th>
                                 </tr>
                                 </thead>
@@ -297,99 +303,114 @@
 
 
             rules: [
-                { id: '1', text: '小金額且設備低風險', level: 'success', description: '交易金額低於300元且來自已知安全設備，可自動通過',
-                  condition: tx => tx.amount < 300 && tx.deviceRisk > 0.3, action: 'APPROVE' },
-
-                // 修正後的規則2
                 {
-                    id: '2',
-                    text: '前24小時低風險交易，總金額小於$1000',
+                    id: '1',
+                    text: '15分鐘內，同卡號有驗證成功且無失敗，累積金額<3000',
                     level: 'success',
-                    description: '當前交易時間往前推算24小時內，同一卡號的交易（包括當前交易）總金額低於1000元，且其中有至少一筆低風險交易通過',
+                    description: '15分鐘內，同卡號有驗證成功且無失敗，累積金額<3000 - 低風險',
                     condition: (tx, allTransactions) => {
-                        debugLog(`[規則2] 處理交易: 卡號=${tx.card.substring(0,8)}****, 金額=${tx.amount}, 時間=${Utils.formatDateTime(tx.timestamp)}`);
-
                         const txTime = new Date(tx.timestamp);
-                        const startTime = new Date(txTime.getTime() - 24 * 60 * 60 * 1000); // 往前推算24小時
-
-                        debugLog(`[規則2] 時間範圍: ${Utils.formatDateTime(startTime)} ~ ${Utils.formatDateTime(txTime)}`);
-
-                        // 篩選當前交易時間往前24小時內的同卡號交易（包括當前交易）
-                        const recentTxs = allTransactions
+                        const startTime = new Date(txTime.getTime() - 15 * 60 * 1000);
+                        
+                        const recent15Txs = allTransactions
+                            .filter(t => t.card === tx.card)
                             .filter(t => {
-                                const isCurrentCard = t.card === tx.card;
                                 const tTime = new Date(t.timestamp);
-                                const inTimeRange = tTime >= startTime && tTime <= txTime;
-                                const hasAction = t.action !== undefined; // 確保交易已處理
-
-                                if (isCurrentCard && inTimeRange) {
-                                    debugLog(`[規則2] 找到相關交易: ID=${t.id}, 金額=${t.amount}, 時間=${Utils.formatDateTime(t.timestamp)}, 動作=${t.action || '未處理'}`);
-                                }
-
-                                return isCurrentCard && inTimeRange;
+                                return tTime >= startTime && tTime <= txTime;
                             });
-
-                        // 檢查當前交易是否已經包含在列表中
-                        const currentTxIncluded = recentTxs.some(t => t.id === tx.id);
-                        if (!currentTxIncluded) {
-                            debugLog(`[規則2] 當前交易(ID=${tx.id})不在篩選結果中，需要額外計入當前交易金額`);
-                        }
-
-                        debugLog(`[規則2] 找到 ${recentTxs.length} 筆相關交易${currentTxIncluded ? '（含當前交易）' : '（不含當前交易）'}`);
-
-                        // 檢查是否有低風險交易（APPROVE）- 排除當前交易
-                        // const priorAcceptableTxs = recentTxs.filter(t => t.id !== tx.id && t.action === 'APPROVE');
-                        const priorAcceptableTxs = recentTxs.filter(t => t.id !== tx.id && (t.action === 'APPROVE' || t.action === 'REVIEW'));
-
-                        const hasLowRiskPriorTx = priorAcceptableTxs.length > 0;
-
-                        debugLog(`[規則2] 前期低風險交易數: ${priorAcceptableTxs.length}`, hasLowRiskPriorTx ? 'success' : 'warning');
-
-                        // 計算總金額（確保包括當前交易）
-                        let totalAmount = recentTxs.reduce((sum, t) => sum + t.amount, 0);
-                        if (!currentTxIncluded) {
-                            totalAmount += tx.amount;
-                            debugLog(`[規則2] 加入當前交易金額 ${tx.amount}，調整後總金額: ${totalAmount}`);
-                        }
-                        // 最終決策
-                        const result = hasLowRiskPriorTx && totalAmount < 1000;
-                        debugLog(`[規則2] 結果: ${result ? '通過' : '不通過'} (有前期低風險: ${hasLowRiskPriorTx}, 總金額 < 1000: ${totalAmount < 1000})`, result ? 'success' : 'error');
-
-                        if (result) {
-                            debugLog(`[規則2] 交易 ${tx.card.substring(0,8)}**** 命中規則 #2: 前24小時總金額 ${totalAmount}, 低風險交易數 ${priorAcceptableTxs.length}`, 'success');
-                        }
-
-                        return result;
+                        
+                        const hasSuccess = recent15Txs.some(t => t.verificationResult === '成功');
+                        const hasFailure = recent15Txs.some(t => t.verificationResult === '失敗');
+                        const totalAmount = recent15Txs.reduce((sum, t) => sum + t.amount, 0) + tx.amount;
+                        
+                        return hasSuccess && !hasFailure && totalAmount < 3000;
                     },
                     action: 'APPROVE'
                 },
-
-                { id: '3', text: '設備中風險', level: 'warning', description: '使用者的設備風險評分在-0.3至0.3之間，建議額外監控',
-                        condition: tx => tx.deviceRisk >= -0.3 && tx.deviceRisk <= 0.3, action: 'REVIEW' },
-                { id: '4', text: '中高金額', level: 'warning', description: '單筆交易金額超過300元，需要額外審核',
-                  condition: tx => tx.amount > 1500, action: 'REVIEW' },
-                { id: '5', text: '中高金額且來自高風險地區', level: 'danger', description: '交易金額超過1500元且來源IP位於高風險地區',
-                  condition: tx => tx.amount > 300 && ['004', '116','408'].includes(tx.countryCode), action: 'BLOCK' },
-                { id: '6', text: '設備高風險', level: 'danger', description: '設備風險評分小於-0.3，可能表示有異常活動',
-                  condition: tx => tx.deviceRisk < -0.3, action: 'BLOCK' },
-                { id: '7', text: '15分鐘內來自不同地區', level: 'danger', description: '同一卡號在15分鐘內從不同地區發起交易',
-                condition: (tx, allTransactions) => {
-                    const previousTx = allTransactions
-                        .filter(t => t.card === tx.card && new Date(t.timestamp) < new Date(tx.timestamp))
-                        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
-                    return previousTx && Math.abs(new Date(tx.timestamp) - new Date(previousTx.timestamp)) / (1000 * 60) <= 15
-                        && previousTx.countryCode !== tx.countryCode;
-                }, action: 'BLOCK' }
-
+                {
+                    id: '2',
+                    text: '偽冒設備 >0.25、卡號異常>0、卡號測試>0',
+                    level: 'success',
+                    description: '偽冒設備 >0.25、卡號異常>0、卡號測試>0 - 低風險',
+                    condition: tx => tx.fraudDeviceModel > 0.25 && tx.cardAbnormalModel > 0 && tx.cardTestModel > 0,
+                    action: 'APPROVE'
+                },
+                {
+                    id: '3',
+                    text: '使用 Webdriver',
+                    level: 'warning',
+                    description: '使用 Webdriver - 中風險',
+                    condition: tx => tx.webdriver === true,
+                    action: 'REVIEW'
+                },
+                {
+                    id: '4',
+                    text: '使用 VPN',
+                    level: 'warning',
+                    description: '使用 VPN - 中風險',
+                    condition: tx => tx.vpn === true,
+                    action: 'REVIEW'
+                },
+                {
+                    id: '5',
+                    text: '旅遊與娛樂 MCC (T&E transaction)',
+                    level: 'warning',
+                    description: '旅遊與娛樂 MCC (T&E transaction) - 中風險',
+                    condition: tx => ['4111', '4112', '4119', '4121', '4131', '4411', '4511', '5811', '5812', '5813', '7011', '7012', '7032', '7033', '7991', '7992', '7993', '7994', '7995', '7996', '7997', '7998', '7999'].includes(tx.mcc),
+                    action: 'REVIEW'
+                },
+                {
+                    id: '6',
+                    text: '高風險 MCC (High-brand Risk MCCs)',
+                    level: 'warning',
+                    description: '高風險 MCC (High-brand Risk MCCs) - 中風險',
+                    condition: tx => ['5967', '5968', '5969', '6012', '6051', '7273', '7801', '7802', '9311'].includes(tx.mcc),
+                    action: 'REVIEW'
+                },
+                {
+                    id: '7',
+                    text: '使用 Tor 瀏覽器',
+                    level: 'danger',
+                    description: '使用 Tor 瀏覽器 - 高風險',
+                    condition: tx => tx.tor === true,
+                    action: 'BLOCK'
+                },
+                {
+                    id: '8',
+                    text: '20分鐘內，同卡號失敗 > 5次',
+                    level: 'danger',
+                    description: '20分鐘內，同卡號失敗 > 5次 - 高風險',
+                    condition: (tx, allTransactions) => {
+                        const txTime = new Date(tx.timestamp);
+                        const startTime = new Date(txTime.getTime() - 20 * 60 * 1000);
+                        
+                        const recent20Txs = allTransactions
+                            .filter(t => t.card === tx.card)
+                            .filter(t => {
+                                const tTime = new Date(t.timestamp);
+                                return tTime >= startTime && tTime <= txTime;
+                            });
+                        
+                        const failureCount = recent20Txs.filter(t => t.verificationResult === '失敗').length;
+                        
+                        return failureCount > 5;
+                    },
+                    action: 'BLOCK'
+                }
             ],
 
-            defaultRuleIds: ['2', '7', '5', '6', '4', '3', '1']
+            defaultRuleIds: ['8', '7', '6', '5', '4', '3', '2', '1']
         };
         // 交易管理模塊
         const TransactionManager = {
             transactions: [],
 
             async loadOrGenerateTransactions(count = 200, filePath = './data1.json') {
+                // 暫時強制使用生成的數據來測試新欄位
+                this.transactions = this.generateTransactions(count);
+                
+                /*
+                // 原始的文件加載邏輯 - 暫時註釋掉
                 try {
                     const response = await fetch(filePath);
                     if (!response.ok) {
@@ -398,7 +419,19 @@
 
                     const data = await response.json();
                     if (Array.isArray(data) && data.length > 0) {
-                        this.transactions = data;
+                        // 為現有數據添加新欄位
+                        this.transactions = data.map(tx => ({
+                            ...tx,
+                            // 如果新欄位不存在，添加它們
+                            mcc: tx.mcc || this.generateMCC(),
+                            fraudDeviceModel: tx.fraudDeviceModel !== undefined ? tx.fraudDeviceModel : Math.random(),
+                            cardAbnormalModel: tx.cardAbnormalModel !== undefined ? tx.cardAbnormalModel : Math.random() * 2 - 1,
+                            cardTestModel: tx.cardTestModel !== undefined ? tx.cardTestModel : Math.random() * 2 - 1,
+                            vpn: tx.vpn !== undefined ? tx.vpn : Math.random() < 0.1,
+                            tor: tx.tor !== undefined ? tx.tor : Math.random() < 0.05,
+                            webdriver: tx.webdriver !== undefined ? tx.webdriver : Math.random() < 0.15,
+                            verificationResult: tx.verificationResult || (Math.random() < 0.8 ? '成功' : '失敗')
+                        }));
 
                     } else {
                         this.transactions = this.generateTransactions(count);
@@ -406,6 +439,7 @@
                 } catch (error) {
                     this.transactions = this.generateTransactions(count);
                 }
+                */
 
                 // 記錄地區分佈統計
                 const countryStats = new Map();
@@ -428,6 +462,21 @@
                 this.loadTransactions();
                 console.log(this.transactions);
                 return this.transactions;
+            },
+
+            generateMCC() {
+                const mccCodes = [
+                    '1520', '1711', '1731', '1740', '1750', '1761', '1771', '1799',
+                    '2741', '2791', '2842',
+                    '3000', '3001', '3002', '3003', '3004', '3005', '3006', '3007', '3008', '3009',
+                    '4111', '4112', '4119', '4121', '4131', '4411', '4511',
+                    '5200', '5211', '5231', '5251', '5261', '5271', '5291', '5309', '5310', '5311', '5331', '5399', '5411', '5422', '5441', '5451', '5462', '5499', '5511', '5521', '5531', '5532', '5533', '5541', '5542', '5551', '5561', '5571', '5592', '5598', '5599', '5611', '5621', '5631', '5641', '5651', '5655', '5661', '5681', '5691', '5697', '5698', '5699', '5712', '5713', '5714', '5718', '5719', '5722', '5732', '5733', '5734', '5735', '5811', '5812', '5813', '5814', '5815', '5816', '5817', '5818', '5912', '5921', '5931', '5932', '5933', '5937', '5940', '5941', '5942', '5943', '5944', '5945', '5946', '5947', '5948', '5949', '5950', '5960', '5962', '5963', '5964', '5965', '5966', '5967', '5968', '5969', '5970', '5971', '5972', '5973', '5975', '5976', '5977', '5978', '5983', '5992', '5993', '5994', '5995', '5996', '5997', '5998', '5999',
+                    '6010', '6011', '6012', '6051',
+                    '7011', '7012', '7032', '7033', '7210', '7211', '7216', '7217', '7221', '7230', '7251', '7261', '7273', '7276', '7277', '7278', '7296', '7297', '7298', '7299', '7311', '7321', '7322', '7333', '7338', '7339', '7342', '7349', '7361', '7372', '7375', '7379', '7392', '7393', '7394', '7395', '7399', '7511', '7512', '7513', '7519', '7523', '7531', '7534', '7535', '7538', '7542', '7549', '7622', '7623', '7629', '7631', '7641', '7692', '7699', '7800', '7801', '7802', '7829', '7832', '7833', '7841', '7911', '7922', '7929', '7932', '7933', '7941', '7991', '7992', '7993', '7994', '7995', '7996', '7997', '7998', '7999',
+                    '8011', '8021', '8031', '8041', '8042', '8043', '8049', '8050', '8062', '8071', '8099', '8111', '8211', '8220', '8241', '8244', '8249', '8299', '8351', '8398', '8641', '8651', '8661', '8675', '8699', '8734', '8911', '8931', '8999',
+                    '9211', '9222', '9223', '9311', '9399', '9402', '9700', '9701', '9702', '9751', '9752', '9753'
+                ];
+                return mccCodes[Math.floor(Math.random() * mccCodes.length)];
             },
 
             generateTransactions(count = 200) {
@@ -584,84 +633,37 @@
                     return { amount, countryCode, deviceRisk, isVerified, cumulativeAmount };
                 }
 
-                // 生成交易
+                // 簡化生成交易 - 只生成基本數據和新欄位
                 for (let i = 0; i < count; i++) {
                     const card = bankCardPrefixes[Math.floor(Math.random() * bankCardPrefixes.length)] +
                         Math.floor(100000000000000 + Math.random() * 900000000000000).toString().padStart(15, '0');
                     const timestamp = Utils.getRandomTime();
-
-                    // 獲取該卡號的歷史交易
-                    let prevTxs = cardTransactionMap.get(card) || [];
-                    // 選擇目標規則
-                    const targetRule = chooseTargetRule(i);
-                    if (targetRule === '2' || targetRule === '7') {
-                        rule2or7Indices.push(i);
-                    }
-
-                    // 生成交易屬性
-                    const { amount, countryCode, deviceRisk, isVerified, cumulativeAmount } = generateTransactionForRule(targetRule, card, timestamp, prevTxs);
+                    const countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
+                    const amountRange = amountRanges[Math.floor(Math.random() * amountRanges.length)];
+                    const amount = Math.floor(Math.random() * (amountRange.max - amountRange.min + 1)) + amountRange.min;
 
                     const tx = {
                         id: i + 1,
                         card,
                         countryCode,
                         amount,
-                        deviceRisk,
-                        isVerified,
-                        cumulativeAmount,
+                        deviceRisk: deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)],
                         timestamp,
-                        targetRule
+                        // 新增欄位
+                        mcc: this.generateMCC(),
+                        fraudDeviceModel: Math.random(),
+                        cardAbnormalModel: Math.random() * 2 - 1,
+                        cardTestModel: Math.random() * 2 - 1,
+                        vpn: Math.random() < 0.1,
+                        tor: Math.random() < 0.05,
+                        webdriver: Math.random() < 0.15,
+                        verificationResult: Math.random() < 0.8 ? '成功' : '失敗'
                     };
-
-                    // 更新卡號的交易歷史
-                    prevTxs.push(tx);
-                    cardTransactionMap.set(card, prevTxs);
 
                     this.transactions.push(tx);
                 }
 
-                // 為規則2和規則7添加必要的上下文交易
-                for (let i = 0; i < this.transactions.length; i++) {
-                    const tx = this.transactions[i];
-                    const prevTxs = cardTransactionMap.get(tx.card) || [];
-                    const prevTxsBefore = prevTxs.filter(t => new Date(t.timestamp) < new Date(tx.timestamp));
-
-                    if (tx.targetRule === '2' && !prevTxsBefore.some(t => t.action === 'APPROVE')) {
-                        // 添加一筆低風險交易
-                        const prevTime = new Date(tx.timestamp.getTime() - Math.random() * 24 * 60 * 60 * 1000);
-                        const prevTx = {
-                            id: this.transactions.length + 1,
-                            card: tx.card,
-                            countryCode: tx.countryCode,
-                            amount: Math.floor(Math.random() * (300 - 10 + 1)) + 10,
-                            deviceRisk: deviceRiskLevels.filter(r => r > 0.3)[Math.floor(Math.random() * deviceRiskLevels.filter(r => r > 0.3).length)],
-                            isVerified: true,
-                            cumulativeAmount: tx.cumulativeAmount - tx.amount,
-                            timestamp: prevTime,
-                            action: 'APPROVE'
-                        };
-                        this.transactions.push(prevTx);
-                        prevTxs.push(prevTx);
-                        cardTransactionMap.set(tx.card, prevTxs);
-                    } else if (tx.targetRule === '7' && !prevTxsBefore.some(t => Math.abs(new Date(tx.timestamp) - new Date(t.timestamp)) / (1000 * 60) <= 15 && t.countryCode !== tx.countryCode)) {
-                        // 添加一筆不同地區的交易
-                        const prevTime = new Date(tx.timestamp.getTime() - Math.random() * 15 * 60 * 1000);
-                        const prevCountry = countryCodes.filter(c => c !== tx.countryCode)[Math.floor(Math.random() * (countryCodes.length - 1))];
-                        const prevTx = {
-                            id: this.transactions.length + 1,
-                            card: tx.card,
-                            countryCode: prevCountry,
-                            amount: Math.floor(Math.random() * (5000 - 10 + 1)) + 10,
-                            deviceRisk: tx.deviceRisk,
-                            isVerified: tx.isVerified,
-                            cumulativeAmount: tx.cumulativeAmount - tx.amount,
-                            timestamp: prevTime
-                        };
-                        this.transactions.push(prevTx);
-                        prevTxs.push(prevTx);
-                        cardTransactionMap.set(tx.card, prevTxs);
-                    }
-                }
+                // 移除複雜的規則特定生成邏輯，簡化處理
 
                 // 確保台灣交易
                 const taiwanTxCount = this.transactions.filter(tx => tx.countryCode === '158').length;
@@ -678,9 +680,16 @@
                             countryCode: '158',
                             amount,
                             deviceRisk: deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)],
-                            isVerified: Math.random() < 0.75,
-                            cumulativeAmount: amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0),
-                            timestamp: Utils.getRandomTime()
+                            timestamp: Utils.getRandomTime(),
+                            // 新增欄位
+                            mcc: this.generateMCC(),
+                            fraudDeviceModel: Math.random(),
+                            cardAbnormalModel: Math.random() * 2 - 1,
+                            cardTestModel: Math.random() * 2 - 1,
+                            vpn: Math.random() < 0.1,
+                            tor: Math.random() < 0.05,
+                            webdriver: Math.random() < 0.15,
+                            verificationResult: Math.random() < 0.8 ? '成功' : '失敗'
                         });
                     }
                 }
@@ -715,11 +724,25 @@
                         <td>${Utils.formatDateTime(tx.timestamp)}</td>
                         <td>${Data.countryMap[tx.countryCode] || tx.countryCode}</td>
                         <td class="text-end">${tx.amount.toLocaleString()}</td>
+                        <td>${tx.mcc || 'N/A'}</td>
                         <td class="text-end">
                             <span class="risk-badge ${
-                                tx.deviceRisk > 0.3 ? 'success' : tx.deviceRisk >= 0 ? 'warning' : 'danger'
-                            }">${tx.deviceRisk.toFixed(1)}</span>
+                                tx.fraudDeviceModel > 0.5 ? 'success' : tx.fraudDeviceModel >= 0.25 ? 'warning' : 'danger'
+                            }">${tx.fraudDeviceModel ? tx.fraudDeviceModel.toFixed(2) : 'N/A'}</span>
                         </td>
+                        <td class="text-end">
+                            <span class="risk-badge ${
+                                tx.cardAbnormalModel > 0 ? 'warning' : 'success'
+                            }">${tx.cardAbnormalModel ? tx.cardAbnormalModel.toFixed(2) : 'N/A'}</span>
+                        </td>
+                        <td class="text-end">
+                            <span class="risk-badge ${
+                                tx.cardTestModel > 0 ? 'warning' : 'success'
+                            }">${tx.cardTestModel ? tx.cardTestModel.toFixed(2) : 'N/A'}</span>
+                        </td>
+                        <td><span class="badge ${tx.vpn ? 'bg-warning' : 'bg-secondary'}">${tx.vpn ? 'VPN' : '無'}</span></td>
+                        <td><span class="badge ${tx.tor ? 'bg-danger' : 'bg-secondary'}">${tx.tor ? 'Tor' : '無'}</span></td>
+                        <td><span class="badge ${tx.webdriver ? 'bg-warning' : 'bg-secondary'}">${tx.webdriver ? 'Web' : '無'}</span></td>
                         <td></td>
                     `;
 
@@ -741,7 +764,7 @@
                 logPanel: null
             },
 
-            init() {
+            async init() {
                 this.elements = {
                     executionZone: document.getElementById('execution-zone'),
                     availableRules: document.getElementById('available-rules'),
@@ -755,7 +778,12 @@
 
                 this.initializeRules();
                 TransactionManager.loadTransactions();
-                ChartManager.init();
+                await ChartManager.init();
+                
+                // 初始化後等待一下再更新圖表，確保地圖已加載
+                setTimeout(() => {
+                    ChartManager.updateAll();
+                }, 500);
 
                 const rulesTitle = document.getElementById('rules-title');
                 if (rulesTitle) {
@@ -1025,7 +1053,7 @@
             resetTransactionStatus() {
                 this.elements.transactionTable.querySelectorAll('tr').forEach(row => {
                     row.querySelector('td:first-child').innerHTML = '<i class="fas fa-circle-notch fa-spin text-secondary"></i>';
-                    row.querySelector('td:last-child').textContent = '';
+                    row.querySelector('td:nth-child(13)').textContent = '';
                     row.classList.remove('highlighted');
                 });
             },
@@ -1127,7 +1155,7 @@
 
                 const row = document.querySelector(`#transaction-table tr[data-id="${tx.id}"]`);
                 const statusCell = row.querySelector('td:first-child');
-                const hitRuleCell = row.querySelector('td:last-child');
+                const hitRuleCell = row.querySelector('td:nth-child(13)');
                 let action = this.getDefaultAction(riskLevel);
                 let matchedRule = null;
 
@@ -1192,8 +1220,8 @@
                 riskPie: null
             },
 
-            init() {
-                this.initWorldMap();
+            async init() {
+                await this.initWorldMap();
                 this.initHourlyRiskChart();
                 this.initRiskPieChart();
                 window.addEventListener('resize', () => {
@@ -1201,25 +1229,101 @@
                 });
             },
 
-            initWorldMap() {
+            async initWorldMap() {
                 const chartDom = document.getElementById('world-map');
                 if (!chartDom) return;
 
                 this.charts.worldMap = echarts.init(chartDom);
                 this.charts.worldMap.showLoading({ text: '加載世界地圖數據中...', maskColor: 'rgba(255, 255, 255, 0.8)', textColor: '#1890ff' });
 
-                fetch('./wMap.json')
-                    .then(response => {
-                        if (!response.ok) throw new Error(`無法獲取地圖數據: ${response.statusText}`);
-                        return response.json();
-                    })
-                    .then(worldJson => {
-                        echarts.registerMap('world', worldJson);
-                        this.charts.worldMap.hideLoading();
-                        this.charts.worldMap.setOption({ series: [{ center: [0, 30], zoom: 1.2 }] });
-                        Utils.addLog('世界地圖數據加載成功');
-                    })
-                    .catch(error => Utils.addLog(`加載地圖數據失敗: ${error.message}`));
+                // 嘗試多個路徑加載地圖數據
+                const mapPaths = ['./wMap.json', 'wMap.json'];
+                let mapLoaded = false;
+                
+                for (let i = 0; i < mapPaths.length && !mapLoaded; i++) {
+                    try {
+                        const response = await fetch(mapPaths[i]);
+                        if (response.ok) {
+                            const worldJson = await response.json();
+                            echarts.registerMap('world', worldJson);
+                            this.charts.worldMap.hideLoading();
+                            
+                            // 設置初始地圖配置
+                            this.charts.worldMap.setOption({
+                                backgroundColor: '#fff',
+                                title: { 
+                                    text: '交易高風險地區分佈', 
+                                    subtext: '顏色深淺代表高風險交易數量', 
+                                    left: 'center', 
+                                    top: 10 
+                                },
+                                tooltip: {
+                                    trigger: 'item',
+                                    formatter: params => params.data
+                                        ? `${params.data.name}<br/>
+                                           總交易數量: ${params.data.totalCount || 0} 筆<br/>
+                                           高風險交易: ${params.data.highRiskCount || 0} 筆<br/>
+                                           高風險比例: ${params.data.highRiskPercentage || 0}%`
+                                        : params.name
+                                },
+                                visualMap: {
+                                    show: true,
+                                    min: 0,
+                                    max: 10,
+                                    calculable: true,
+                                    inRange: { color: ['#fee2e2', '#ef4444'] },
+                                    text: ['高風險交易多', '高風險交易少'],
+                                    left: 'left',
+                                    top: 'bottom',
+                                    textStyle: { color: '#333' }
+                                },
+                                series: [{
+                                    name: '高風險交易',
+                                    type: 'map',
+                                    map: 'world',
+                                    aspectScale: 0.75,
+                                    roam: true,
+                                    zoom: 1.2,
+                                    center: [0, 30],
+                                    selectedMode: false,
+                                    label: { show: false },
+                                    emphasis: { 
+                                        label: { show: true, fontSize: 10, color: '#333' }, 
+                                        itemStyle: { areaColor: '#fecaca' } 
+                                    },
+                                    data: [],
+                                    itemStyle: { 
+                                        areaColor: '#f5f5f5', 
+                                        borderColor: '#ccc', 
+                                        borderWidth: 0.5 
+                                    }
+                                }]
+                            });
+                            
+                            mapLoaded = true;
+                            Utils.addLog('世界地圖數據加載成功');
+                        }
+                    } catch (error) {
+                        console.log(`路徑 ${mapPaths[i]} 失敗:`, error);
+                    }
+                }
+                
+                // 如果所有路徑都失敗，顯示錯誤信息
+                if (!mapLoaded) {
+                    this.charts.worldMap.hideLoading();
+                    this.charts.worldMap.setOption({
+                        backgroundColor: '#fff',
+                        title: {
+                            text: '地圖數據加載失敗',
+                            subtext: '請確保從HTTP服務器運行此應用程式',
+                            left: 'center',
+                            top: 'center',
+                            textStyle: { color: '#f44336', fontSize: 16 },
+                            subtextStyle: { color: '#666', fontSize: 12 }
+                        }
+                    });
+                    Utils.addLog('地圖數據加載失敗 - 可能需要從HTTP服務器運行');
+                }
             },
 
             initHourlyRiskChart() {
@@ -1252,7 +1356,7 @@
                 try {
                     const countryCounts = new Map();
                     const highRiskCounts = new Map();
-                    const rule7Counts = new Map();
+                    const highRiskRuleCounts = new Map();
 
                     document.querySelectorAll('#transaction-table tr').forEach(row => {
                         const txId = row.getAttribute('data-id');
@@ -1260,12 +1364,12 @@
                         if (!tx) return;
 
                         const isHighRisk = row.querySelector('td:first-child i')?.classList.contains('text-danger');
-                        const hitRule = row.querySelector('td:last-child span')?.textContent || '';
+                        const hitRule = row.querySelector('td:nth-child(13) span')?.textContent || '';
                         countryCounts.set(tx.countryCode, (countryCounts.get(tx.countryCode) || 0) + 1);
                         if (isHighRisk) {
                             highRiskCounts.set(tx.countryCode, (highRiskCounts.get(tx.countryCode) || 0) + 1);
-                            if (hitRule.includes('#7')) {
-                                rule7Counts.set(tx.countryCode, (rule7Counts.get(tx.countryCode) || 0) + 1);
+                            if (hitRule.includes('#7') || hitRule.includes('#8')) {
+                                highRiskRuleCounts.set(tx.countryCode, (highRiskRuleCounts.get(tx.countryCode) || 0) + 1);
                             }
                         }
                     });
@@ -1281,7 +1385,7 @@
                         value: highRiskCounts.get(code) || 0,
                         totalCount: total,
                         highRiskCount: highRiskCounts.get(code) || 0,
-                        rule7Count: rule7Counts.get(code) || 0,
+                        highRiskRuleCount: highRiskRuleCounts.get(code) || 0,
                         highRiskPercentage: total ? Math.round(((highRiskCounts.get(code) || 0) / total) * 100) : 0,
                         originalCode: code
                     }));
@@ -1446,9 +1550,9 @@
         });
 
         // 初始化應用
-        window.onload = () => {
-            TransactionManager.loadOrGenerateTransactions();
-            RuleManager.init();
+        window.onload = async () => {
+            await TransactionManager.loadOrGenerateTransactions();
+            await RuleManager.init();
         };
     </script>
 </body>
