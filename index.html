@@ -123,12 +123,14 @@
                                     <th>地區</th>
                                     <th class="text-end">金額</th>
                                     <th>MCC</th>
+                                    <th class="text-end">設備風險</th>
                                     <th class="text-end">偽冒設備</th>
                                     <th class="text-end">卡號異常</th>
                                     <th class="text-end">卡號測試</th>
                                     <th>VPN</th>
                                     <th>Tor</th>
                                     <th>Webdriver</th>
+                                    <th>驗證結果</th>
                                     <th>命中規則</th>
                                 </tr>
                                 </thead>
@@ -303,6 +305,7 @@
 
 
             rules: [
+                // 新風險規則
                 {
                     id: '1',
                     text: '15分鐘內，同卡號有驗證成功且無失敗，累積金額<3000',
@@ -335,8 +338,49 @@
                     condition: tx => tx.fraudDeviceModel > 0.25 && tx.cardAbnormalModel > 0 && tx.cardTestModel > 0,
                     action: 'APPROVE'
                 },
+                
+                // 恢復的原始有用規則
                 {
                     id: '3',
+                    text: '小金額且設備低風險',
+                    level: 'success',
+                    description: '交易金額低於300元且來自已知安全設備，可自動通過',
+                    condition: tx => tx.amount < 300 && tx.deviceRisk > 0.3,
+                    action: 'APPROVE'
+                },
+                {
+                    id: '4',
+                    text: '前24小時低風險交易，總金額小於$1000',
+                    level: 'success',
+                    description: '當前交易時間往前推算24小時內，同一卡號的交易（包括當前交易）總金額低於1000元，且其中有至少一筆低風險交易通過',
+                    condition: (tx, allTransactions) => {
+                        const txTime = new Date(tx.timestamp);
+                        const startTime = new Date(txTime.getTime() - 24 * 60 * 60 * 1000);
+
+                        const recentTxs = allTransactions
+                            .filter(t => t.card === tx.card)
+                            .filter(t => {
+                                const tTime = new Date(t.timestamp);
+                                return tTime >= startTime && tTime <= txTime;
+                            });
+
+                        const priorAcceptableTxs = recentTxs.filter(t => t.id !== tx.id && (t.action === 'APPROVE' || t.action === 'REVIEW'));
+                        const hasLowRiskPriorTx = priorAcceptableTxs.length > 0;
+
+                        let totalAmount = recentTxs.reduce((sum, t) => sum + t.amount, 0);
+                        const currentTxIncluded = recentTxs.some(t => t.id === tx.id);
+                        if (!currentTxIncluded) {
+                            totalAmount += tx.amount;
+                        }
+
+                        return hasLowRiskPriorTx && totalAmount < 1000;
+                    },
+                    action: 'APPROVE'
+                },
+
+                // 中風險規則
+                {
+                    id: '5',
                     text: '使用 Webdriver',
                     level: 'warning',
                     description: '使用 Webdriver - 中風險',
@@ -344,7 +388,7 @@
                     action: 'REVIEW'
                 },
                 {
-                    id: '4',
+                    id: '6',
                     text: '使用 VPN',
                     level: 'warning',
                     description: '使用 VPN - 中風險',
@@ -352,7 +396,23 @@
                     action: 'REVIEW'
                 },
                 {
-                    id: '5',
+                    id: '7',
+                    text: '設備中風險',
+                    level: 'warning',
+                    description: '使用者的設備風險評分在-0.3至0.3之間，建議額外監控',
+                    condition: tx => tx.deviceRisk >= -0.3 && tx.deviceRisk <= 0.3,
+                    action: 'REVIEW'
+                },
+                {
+                    id: '8',
+                    text: '中高金額',
+                    level: 'warning',
+                    description: '單筆交易金額超過1500元，需要額外審核',
+                    condition: tx => tx.amount > 1500,
+                    action: 'REVIEW'
+                },
+                {
+                    id: '9',
                     text: '旅遊與娛樂 MCC (T&E transaction)',
                     level: 'warning',
                     description: '旅遊與娛樂 MCC (T&E transaction) - 中風險',
@@ -360,15 +420,17 @@
                     action: 'REVIEW'
                 },
                 {
-                    id: '6',
+                    id: '10',
                     text: '高風險 MCC (High-brand Risk MCCs)',
                     level: 'warning',
                     description: '高風險 MCC (High-brand Risk MCCs) - 中風險',
                     condition: tx => ['5967', '5968', '5969', '6012', '6051', '7273', '7801', '7802', '9311'].includes(tx.mcc),
                     action: 'REVIEW'
                 },
+
+                // 高風險規則
                 {
-                    id: '7',
+                    id: '11',
                     text: '使用 Tor 瀏覽器',
                     level: 'danger',
                     description: '使用 Tor 瀏覽器 - 高風險',
@@ -376,7 +438,7 @@
                     action: 'BLOCK'
                 },
                 {
-                    id: '8',
+                    id: '12',
                     text: '20分鐘內，同卡號失敗 > 5次',
                     level: 'danger',
                     description: '20分鐘內，同卡號失敗 > 5次 - 高風險',
@@ -396,21 +458,46 @@
                         return failureCount > 5;
                     },
                     action: 'BLOCK'
+                },
+                {
+                    id: '13',
+                    text: '設備高風險',
+                    level: 'danger',
+                    description: '設備風險評分小於-0.3，可能表示有異常活動',
+                    condition: tx => tx.deviceRisk < -0.3,
+                    action: 'BLOCK'
+                },
+                {
+                    id: '14',
+                    text: '中高金額且來自高風險地區',
+                    level: 'danger',
+                    description: '交易金額超過1500元且來源IP位於高風險地區',
+                    condition: tx => tx.amount > 300 && ['004', '116','408'].includes(tx.countryCode),
+                    action: 'BLOCK'
+                },
+                {
+                    id: '15',
+                    text: '15分鐘內來自不同地區',
+                    level: 'danger',
+                    description: '同一卡號在15分鐘內從不同地區發起交易',
+                    condition: (tx, allTransactions) => {
+                        const previousTx = allTransactions
+                            .filter(t => t.card === tx.card && new Date(t.timestamp) < new Date(tx.timestamp))
+                            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+                        return previousTx && Math.abs(new Date(tx.timestamp) - new Date(previousTx.timestamp)) / (1000 * 60) <= 15
+                            && previousTx.countryCode !== tx.countryCode;
+                    },
+                    action: 'BLOCK'
                 }
             ],
 
-            defaultRuleIds: ['8', '7', '6', '5', '4', '3', '2', '1']
+            defaultRuleIds: ['15', '14', '13', '12', '11', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1']
         };
         // 交易管理模塊
         const TransactionManager = {
             transactions: [],
 
             async loadOrGenerateTransactions(count = 200, filePath = './data1.json') {
-                // 暫時強制使用生成的數據來測試新欄位
-                this.transactions = this.generateTransactions(count);
-                
-                /*
-                // 原始的文件加載邏輯 - 暫時註釋掉
                 try {
                     const response = await fetch(filePath);
                     if (!response.ok) {
@@ -419,10 +506,10 @@
 
                     const data = await response.json();
                     if (Array.isArray(data) && data.length > 0) {
-                        // 為現有數據添加新欄位
+                        // 使用文件中的數據，如果缺少新欄位則補充
                         this.transactions = data.map(tx => ({
                             ...tx,
-                            // 如果新欄位不存在，添加它們
+                            // 確保新欄位存在，如果不存在則添加預設值
                             mcc: tx.mcc || this.generateMCC(),
                             fraudDeviceModel: tx.fraudDeviceModel !== undefined ? tx.fraudDeviceModel : Math.random(),
                             cardAbnormalModel: tx.cardAbnormalModel !== undefined ? tx.cardAbnormalModel : Math.random() * 2 - 1,
@@ -439,7 +526,6 @@
                 } catch (error) {
                     this.transactions = this.generateTransactions(count);
                 }
-                */
 
                 // 記錄地區分佈統計
                 const countryStats = new Map();
@@ -727,22 +813,28 @@
                         <td>${tx.mcc || 'N/A'}</td>
                         <td class="text-end">
                             <span class="risk-badge ${
+                                tx.deviceRisk > 0.3 ? 'success' : tx.deviceRisk >= -0.3 ? 'warning' : 'danger'
+                            }">${tx.deviceRisk ? tx.deviceRisk.toFixed(1) : 'N/A'}</span>
+                        </td>
+                        <td class="text-end">
+                            <span class="risk-badge ${
                                 tx.fraudDeviceModel > 0.5 ? 'success' : tx.fraudDeviceModel >= 0.25 ? 'warning' : 'danger'
                             }">${tx.fraudDeviceModel ? tx.fraudDeviceModel.toFixed(2) : 'N/A'}</span>
                         </td>
                         <td class="text-end">
                             <span class="risk-badge ${
                                 tx.cardAbnormalModel > 0 ? 'warning' : 'success'
-                            }">${tx.cardAbnormalModel ? tx.cardAbnormalModel.toFixed(2) : 'N/A'}</span>
+                            }">${tx.cardAbnormalModel !== undefined ? tx.cardAbnormalModel.toFixed(2) : 'N/A'}</span>
                         </td>
                         <td class="text-end">
                             <span class="risk-badge ${
                                 tx.cardTestModel > 0 ? 'warning' : 'success'
-                            }">${tx.cardTestModel ? tx.cardTestModel.toFixed(2) : 'N/A'}</span>
+                            }">${tx.cardTestModel !== undefined ? tx.cardTestModel.toFixed(2) : 'N/A'}</span>
                         </td>
                         <td><span class="badge ${tx.vpn ? 'bg-warning' : 'bg-secondary'}">${tx.vpn ? 'VPN' : '無'}</span></td>
                         <td><span class="badge ${tx.tor ? 'bg-danger' : 'bg-secondary'}">${tx.tor ? 'Tor' : '無'}</span></td>
                         <td><span class="badge ${tx.webdriver ? 'bg-warning' : 'bg-secondary'}">${tx.webdriver ? 'Web' : '無'}</span></td>
+                        <td><span class="badge ${tx.verificationResult === '成功' ? 'bg-success' : 'bg-danger'} text-white">${tx.verificationResult || 'N/A'}</span></td>
                         <td></td>
                     `;
 
@@ -1053,7 +1145,7 @@
             resetTransactionStatus() {
                 this.elements.transactionTable.querySelectorAll('tr').forEach(row => {
                     row.querySelector('td:first-child').innerHTML = '<i class="fas fa-circle-notch fa-spin text-secondary"></i>';
-                    row.querySelector('td:nth-child(13)').textContent = '';
+                    row.querySelector('td:nth-child(15)').textContent = '';
                     row.classList.remove('highlighted');
                 });
             },
@@ -1155,7 +1247,7 @@
 
                 const row = document.querySelector(`#transaction-table tr[data-id="${tx.id}"]`);
                 const statusCell = row.querySelector('td:first-child');
-                const hitRuleCell = row.querySelector('td:nth-child(13)');
+                const hitRuleCell = row.querySelector('td:nth-child(15)');
                 let action = this.getDefaultAction(riskLevel);
                 let matchedRule = null;
 
@@ -1364,11 +1456,11 @@
                         if (!tx) return;
 
                         const isHighRisk = row.querySelector('td:first-child i')?.classList.contains('text-danger');
-                        const hitRule = row.querySelector('td:nth-child(13) span')?.textContent || '';
+                        const hitRule = row.querySelector('td:nth-child(15) span')?.textContent || '';
                         countryCounts.set(tx.countryCode, (countryCounts.get(tx.countryCode) || 0) + 1);
                         if (isHighRisk) {
                             highRiskCounts.set(tx.countryCode, (highRiskCounts.get(tx.countryCode) || 0) + 1);
-                            if (hitRule.includes('#7') || hitRule.includes('#8')) {
+                            if (hitRule.includes('#11') || hitRule.includes('#12') || hitRule.includes('#13') || hitRule.includes('#14') || hitRule.includes('#15')) {
                                 highRiskRuleCounts.set(tx.countryCode, (highRiskRuleCounts.get(tx.countryCode) || 0) + 1);
                             }
                         }

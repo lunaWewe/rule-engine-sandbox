@@ -337,7 +337,7 @@ tr.highlighted {
 
 .transaction-table {
     width: 100%;
-    min-width: 1400px;
+    min-width: 1600px;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: fixed;
@@ -361,16 +361,18 @@ tr.highlighted {
 .transaction-table th:nth-child(1) { width: 60px; }   /* 狀態 */
 .transaction-table th:nth-child(2) { width: 120px; }  /* 卡號 */
 .transaction-table th:nth-child(3) { width: 140px; }  /* 時間 */
-.transaction-table th:nth-child(4) { width: 80px; }   /* 地區 */
+.transaction-table th:nth-child(4) { width: 70px; }   /* 地區 */
 .transaction-table th:nth-child(5) { width: 80px; }   /* 金額 */
 .transaction-table th:nth-child(6) { width: 60px; }   /* MCC */
-.transaction-table th:nth-child(7) { width: 80px; }   /* 偽冒設備 */
-.transaction-table th:nth-child(8) { width: 80px; }   /* 卡號異常 */
-.transaction-table th:nth-child(9) { width: 80px; }   /* 卡號測試 */
-.transaction-table th:nth-child(10) { width: 60px; }  /* VPN */
-.transaction-table th:nth-child(11) { width: 60px; }  /* Tor */
-.transaction-table th:nth-child(12) { width: 80px; }  /* Webdriver */
-.transaction-table th:nth-child(13) { width: 200px; } /* 命中規則 */
+.transaction-table th:nth-child(7) { width: 80px; }   /* 設備風險 */
+.transaction-table th:nth-child(8) { width: 80px; }   /* 偽冒設備 */
+.transaction-table th:nth-child(9) { width: 80px; }   /* 卡號異常 */
+.transaction-table th:nth-child(10) { width: 80px; }  /* 卡號測試 */
+.transaction-table th:nth-child(11) { width: 50px; }  /* VPN */
+.transaction-table th:nth-child(12) { width: 50px; }  /* Tor */
+.transaction-table th:nth-child(13) { width: 90px; }  /* Webdriver */
+.transaction-table th:nth-child(14) { width: 80px; }  /* 驗證結果 */
+.transaction-table th:nth-child(15) { width: 200px; } /* 命中規則 */
 .transaction-table thead th:first-child {
     border-top-left-radius: 10px;
 }
