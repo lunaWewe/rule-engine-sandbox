@@ -323,7 +323,8 @@
                     id: '1',
                     text: '15分鐘內，同卡號有驗證成功且無失敗，累積金額<3000',
                     level: 'success',
-                    description: '15分鐘內，同卡號有驗證成功且無失敗，累積金額<3000 - 低風險',
+                    description: '短時間內持續成功的交易模式表示用戶行為正常，且金額控制在合理範圍內，顯示為可信任的交易行為 - 低風險',
+
                     condition: (tx, allTransactions) => {
                         const txTime = new Date(tx.timestamp);
                         const startTime = new Date(txTime.getTime() - 15 * 60 * 1000);
@@ -345,19 +346,19 @@
                 },
                 {
                     id: '2',
-                    text: '偽冒設備 >0.25、卡號異常>0、卡號測試>0',
+                    text: '偽冒設備 >0.3、卡號異常>0、卡號測試>0',
                     level: 'success',
-                    description: '偽冒設備 >0.25、卡號異常>0、卡號測試>0 - 低風險',
-                    condition: tx => tx.fraudDeviceModel > 0.25 && tx.cardAbnormalModel > 0 && tx.cardTestModel > 0,
+                    description: '多重安全檢測都通過正常標準，設備可信度高且卡號通過各項安全驗證，表示交易環境安全 - 低風險',
+                    condition: tx => tx.fraudDeviceModel > 0.3 && tx.cardAbnormalModel > 0 && tx.cardTestModel > 0,
                     action: 'APPROVE'
                 },
                 
                 // 恢復的原始有用規則
                 {
-                    id: '4',
+                    id: '3',
                     text: '前24小時低風險交易，總金額小於$1000',
                     level: 'success',
-                    description: '當前交易時間往前推算24小時內，同一卡號的交易（包括當前交易）總金額低於1000元，且其中有至少一筆低風險交易通過',
+                    description: '用戶過去24小時有良好交易記錄且消費金額適中，顯示正常的消費模式和財務控制能力 - 低風險',
                     condition: (tx, allTransactions) => {
                         const txTime = new Date(tx.timestamp);
                         const startTime = new Date(txTime.getTime() - 24 * 60 * 60 * 1000);
@@ -385,60 +386,60 @@
 
                 // 中風險規則
                 {
-                    id: '5',
+                    id: '4',
                     text: '使用 Webdriver',
                     level: 'warning',
-                    description: '使用 Webdriver - 中風險',
+                    description: 'Webdriver通常用於自動化程式，可能是機器人進行的異常操作，需要額外審核以確認是否為真實交易 - 中風險',
                     condition: tx => tx.webdriver === true,
                     action: 'REVIEW'
                 },
                 {
-                    id: '6',
+                    id: '5',
                     text: '使用 VPN',
                     level: 'warning',
-                    description: '使用 VPN - 中風險',
+                    description: 'VPN可隱藏真實位置且常被用於迴避地域限制，可能是作弊者隱藏身份的手段，需要人工審核 - 中風險',
                     condition: tx => tx.vpn === true,
                     action: 'REVIEW'
                 },
                 {
-                    id: '8',
+                    id: '6',
                     text: '中高金額',
                     level: 'warning',
-                    description: '單筆交易金額超過1500元，需要額外審核',
+                    description: '大額交易可能代表作弊者試圖盜取更多資金，或是異常的消費模式，需要人工審核確認交易合法性 - 中風險',
                     condition: tx => tx.amount > 1500,
                     action: 'REVIEW'
                 },
                 {
-                    id: '9',
+                    id: '7',
                     text: '旅遊與娛樂 MCC (T&E transaction)',
                     level: 'warning',
-                    description: '旅遊與娛樂 MCC (T&E transaction) - 中風險。包含：4111(航空公司), 4112(客運), 4119(救護車服務), 4121(計程車/禮車), 4131(公車), 4411(汽船/郵輪), 4511(航空公司), 5811-5813(餐廳), 7011-7012(住宿), 7032-7033(運動/娛樂營地), 7991-7999(旅遊服務)',
+                    description: '旅遊娛樂類交易常被作弊者利用來洗錢或進行欺詐，且這類交易通常金額較高且難以驗證，需要額外關注 - 中風險',
                     condition: tx => ['4111', '4112', '4119', '4121', '4131', '4411', '4511', '5811', '5812', '5813', '7011', '7012', '7032', '7033', '7991', '7992', '7993', '7994', '7995', '7996', '7997', '7998', '7999'].includes(tx.mcc),
                     action: 'REVIEW'
                 },
                 {
-                    id: '10',
+                    id: '8',
                     text: '高風險 MCC (High-brand Risk MCCs)',
                     level: 'warning',
-                    description: '高風險 MCC (High-brand Risk MCCs) - 中風險。包含：5967(直銷), 5968-5969(直銷/郵購), 6012(金融機構), 6051(非金融機構-外幣/旅行支票), 7273(約會服務), 7801-7802(博弈), 9311(稅務繳費)',
+                    description: '這些商家類別歷史上有較高的欺詐比率，包括直銷、博弈和金融服務等，需要額外審查以預防潛在風險 - 中風險',
                     condition: tx => ['5967', '5968', '5969', '6012', '6051', '7273', '7801', '7802', '9311'].includes(tx.mcc),
                     action: 'REVIEW'
                 },
 
                 // 高風險規則
                 {
-                    id: '11',
+                    id: '9',
                     text: '使用 Tor 瀏覽器',
                     level: 'danger',
-                    description: '使用 Tor 瀏覽器 - 高風險',
+                    description: 'Tor是匿名網路工具，常被犯罪分子用於隱藏身份進行非法活動，極難追蹤且風險極高，應直接阻擋 - 高風險',
                     condition: tx => tx.tor === true,
                     action: 'BLOCK'
                 },
                 {
-                    id: '12',
+                    id: '10',
                     text: '20分鐘內，同卡號失敗 > 5次',
                     level: 'danger',
-                    description: '20分鐘內，同卡號失敗 > 5次 - 高風險',
+                    description: '短時間內多次驗證失敗可能表示帳號被盜用或遭受暴力破解攻擊，具有極高的安全威脅 - 高風險',
                     condition: (tx, allTransactions) => {
                         const txTime = new Date(tx.timestamp);
                         const startTime = new Date(txTime.getTime() - 20 * 60 * 1000);
@@ -457,18 +458,18 @@
                     action: 'BLOCK'
                 },
                 {
-                    id: '14',
+                    id: '11',
                     text: '中高金額且來自高風險地區',
                     level: 'danger',
-                    description: '交易金額超過1500元且來源IP位於高風險地區',
+                    description: '這些國家被國際制裁或有較高的金融犯罪活動，來自這些地區的交易可能涉及洗錢或恢支資助，風險極高 - 高風險',
                     condition: tx => tx.amount > 300 && ['004', '116','408'].includes(tx.countryCode),
                     action: 'BLOCK'
                 },
                 {
-                    id: '15',
+                    id: '12',
                     text: '15分鐘內來自不同地區',
                     level: 'danger',
-                    description: '同一卡號在15分鐘內從不同地區發起交易',
+                    description: '短時間內跨地區交易在物理上不可能，可能是卡號被盜用或複製，具有極高的欺詐可能性，必須立即阻擋 - 高風險',
                     condition: (tx, allTransactions) => {
                         const previousTx = allTransactions
                             .filter(t => t.card === tx.card && new Date(t.timestamp) < new Date(tx.timestamp))
@@ -480,7 +481,7 @@
                 }
             ],
 
-            defaultRuleIds: ['15', '14', '12', '11', '10', '9', '8', '6', '5', '4', '3', '2', '1']
+            defaultRuleIds: ['12', '11', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1']
         };
         // 交易管理模塊
         const TransactionManager = {
@@ -657,17 +658,17 @@
                         <td class="text-center">${tx.mcc || 'N/A'}</td>
                         <td class="text-end">
                             <span class="risk-badge ${
-                                tx.fraudDeviceModel > 0.5 ? 'success' : tx.fraudDeviceModel >= 0.25 ? 'warning' : 'danger'
+                                tx.fraudDeviceModel > 0.3 ? 'success' : tx.fraudDeviceModel >= -0.3 ? 'warning' : 'danger'
                             }">${tx.fraudDeviceModel ? tx.fraudDeviceModel.toFixed(2) : 'N/A'}</span>
                         </td>
                         <td class="text-end">
                             <span class="risk-badge ${
-                                tx.cardAbnormalModel > 0 ? 'warning' : 'success'
+                                tx.cardAbnormalModel > 0.3 ? 'success' : tx.cardAbnormalModel >= -0.3 ? 'warning' : 'danger'
                             }">${tx.cardAbnormalModel !== undefined ? tx.cardAbnormalModel.toFixed(2) : 'N/A'}</span>
                         </td>
                         <td class="text-end">
                             <span class="risk-badge ${
-                                tx.cardTestModel > 0 ? 'warning' : 'success'
+                                tx.cardTestModel > 0.3 ? 'success' : tx.cardTestModel >= -0.3 ? 'warning' : 'danger'
                             }">${tx.cardTestModel !== undefined ? tx.cardTestModel.toFixed(2) : 'N/A'}</span>
                         </td>
                         <td><span class="badge ${tx.vpn ? 'bg-warning' : 'bg-secondary'}">${tx.vpn ? 'VPN' : '無'}</span></td>
@@ -1147,6 +1148,23 @@
 
                 tx.action = action;
 
+                // 根據最終風險等級設定驗證結果
+                if (action === 'APPROVE') {
+                    // 低風險交易（通過）：驗證結果全部成功
+                    tx.verificationResult = '成功';
+                } else {
+                    // 中高風險交易：維持原有的驗證結果或隨機生成
+                    if (!tx.verificationResult) {
+                        tx.verificationResult = Math.random() < 0.8 ? '成功' : '失敗';
+                    }
+                }
+
+                // 更新表格中的驗證結果顯示
+                const verificationCell = row.querySelector('td:nth-child(13)');
+                if (verificationCell) {
+                    verificationCell.innerHTML = `<span class="badge ${tx.verificationResult === '成功' ? 'bg-success' : 'bg-danger'} text-white">${tx.verificationResult}</span>`;
+                }
+
                 statusCell.innerHTML = `
                     <i class="fas fa-${
                         action === 'APPROVE' ? 'check-circle text-success' :
@@ -1611,13 +1629,14 @@
                 Utils.addLog(`風險分布分析: 高風險 ${riskData.high} 筆, 中風險 ${riskData.medium} 筆, 低風險 ${riskData.low} 筆, 總計 ${riskData.total} 筆`);
 
                 chart.setOption({
-                    title: { text: '交易風險分佈', subtext: `總計 ${riskData.total} 筆交易`, left: 'center' },
+                    title: { text: '交易風險分佈', subtext: `總計 ${riskData.total} 筆交易`, left: 'center', top: '10px' },
                     tooltip: { trigger: 'item', formatter: '{a} <br>{b}: {c} 筆 ({d}%)' },
-                    legend: { orient: 'vertical', left: 'left', data: ['高風險', '中風險', '低風險'] },
+                    legend: { orient: 'vertical', left: 'left', top: 'bottom', data: ['高風險', '中風險', '低風險'] },
                     series: [{
                         name: '風險等級',
                         type: 'pie',
                         radius: '50%',
+                        center: ['50%', '55%'],
                         data: [
                             { value: riskData.high, name: '高風險' },
                             { value: riskData.medium, name: '中風險' },

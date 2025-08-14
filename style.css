@@ -237,16 +237,6 @@ body, html {
     color: #9072e8;
 }
 
-.transaction-table thead th:first-child {
-    border-top-left-radius: 10px;
-}
-
-.transaction-table thead th:last-child {
-    border-top-right-radius: 10px;
-}
-
-
-
 .risk-badge {
     padding: 3px 10px;
     border-radius: 50px;
@@ -388,18 +378,25 @@ tr.highlighted {
 /* 表格行樣式 */
 .transaction-table tbody tr {
     background-color: #ffffff;
+    transition: background-color 0.2s ease;
 }
 
 .transaction-table tbody tr:nth-child(odd) {
-    background-color: #f8f6ff !important;
+    background-color: #f8f6ff;
 }
 
 .transaction-table tbody tr:nth-child(even) {
-    background-color: #ffffff !important;
+    background-color: #ffffff;
 }
 
-.transaction-table tbody tr:hover {
-    background-color: #e6e0ff !important;
+/* Hover效果 - 同時設置tr和td */
+#transaction-table tr:hover {
+    background-color: #e6e6e6 !important;
+    cursor: pointer;
+}
+
+#transaction-table tr:hover td {
+    background-color: #e6e6e6 !important;
 }
 
 /* 卡號測試欄位右側增加間距 */
