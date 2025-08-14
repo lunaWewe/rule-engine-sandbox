@@ -480,7 +480,7 @@
                 }
             ],
 
-            defaultRuleIds: ['15', '14', '12', '11', '10', '9', '8', '6', '5', '4', '2', '1']
+            defaultRuleIds: ['15', '14', '12', '11', '10', '9', '8', '6', '5', '4', '3', '2', '1']
         };
         // 交易管理模塊
         const TransactionManager = {
@@ -1461,8 +1461,10 @@
                     if (!tx) return;
 
                     const txDate = new Date(tx.timestamp);
-                    // 創建12小時間隔的時間鍵 (如：1/1 0:00, 1/1 12:00)
-                    const dateKey = `${txDate.getMonth() + 1}/${txDate.getDate()} ${txDate.getHours() < 12 ? '0:00' : '12:00'}`;
+                    // 創建6小時間隔的時間鍵 (如：1/1 0:00, 1/1 6:00, 1/1 12:00, 1/1 18:00)
+                    const hour = txDate.getHours();
+                    const timeSlot = hour < 6 ? '0:00' : hour < 12 ? '6:00' : hour < 18 ? '12:00' : '18:00';
+                    const dateKey = `${txDate.getMonth() + 1}/${txDate.getDate()} ${timeSlot}`;
                     
                     if (!timeSeriesData.has(dateKey)) {
                         timeSeriesData.set(dateKey, { low: 0, medium: 0, high: 0, total: 0, timestamp: txDate });
@@ -1489,21 +1491,14 @@
                 chart.setOption({
                     title: { 
                         text: '交易風險時序分佈', 
-                        subtext: '按實際日期時間統計的風險等級交易數量', 
+                        subtext: '按6小時時段統計的風險等級交易數量', 
                         left: 'center', 
-                        top: 10 
+                        top: 20 
                     },
                     legend: { 
                         data: ['低風險', '中風險', '高風險'], 
                         left: '10%', 
                         bottom: 50 
-                    },
-                    toolbox: { 
-                        feature: { 
-                            saveAsImage: {}, 
-                            dataView: {},
-                            dataZoom: { yAxisIndex: 'none' }
-                        } 
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -1546,9 +1541,9 @@
                     },
                     grid: { 
                         left: '3%', 
-                        right: '4%', 
+                        right: '8%', 
                         bottom: '25%', 
-                        top: '15%', 
+                        top: '20%', 
                         containLabel: true 
                     },
                     dataZoom: [
