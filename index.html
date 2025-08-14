@@ -1336,15 +1336,19 @@
                         .join(', ');
 
 
-                    const mapData = Array.from(countryCounts.entries()).map(([code, total]) => ({
-                        name: Data.countryEChartsMap[code] || Data.countryMap[code] || code,
-                        value: highRiskCounts.get(code) || 0,
-                        totalCount: total,
-                        highRiskCount: highRiskCounts.get(code) || 0,
-                        highRiskRuleCount: highRiskRuleCounts.get(code) || 0,
-                        highRiskPercentage: total ? Math.round(((highRiskCounts.get(code) || 0) / total) * 100) : 0,
-                        originalCode: code
-                    }));
+                    // 只顯示有高風險交易的國家
+                    const mapData = Array.from(highRiskCounts.entries()).map(([code, highRiskCount]) => {
+                        const total = countryCounts.get(code) || 0;
+                        return {
+                            name: Data.countryEChartsMap[code] || Data.countryMap[code] || code,
+                            value: highRiskCount,
+                            totalCount: total,
+                            highRiskCount: highRiskCount,
+                            highRiskRuleCount: highRiskRuleCounts.get(code) || 0,
+                            highRiskPercentage: total ? Math.round((highRiskCount / total) * 100) : 0,
+                            originalCode: code
+                        };
+                    });
 
                     chart.setOption({
                         backgroundColor: '#fff',
