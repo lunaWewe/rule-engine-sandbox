@@ -30,7 +30,7 @@
                     <div class="col-md-6">
                         <div class="card h-100 available-rules-card rounded-5">
                             <div class="card-body">
-                                <h5 id="rules-title" class="card-title border-bottom pb-2" style="cursor: pointer;" onclick="RuleManager.handleTitleClick()">可用規則</h5>
+                                <h5 id="rules-title" class="card-title border-bottom pb-2">可用規則</h5>
                                 <div class="mb-3">
                                     <div id="button-group" class="btn-group w-100 mb-3" style="display: none;">
                                         <button id="default-btn" class="btn btn-outline-primary active" onclick="RuleManager.applyDefaultRules()">預設決策</button>
@@ -149,8 +149,22 @@
         <div class="container-fluid">
             <div class="card rounded-5 mt-3 p-0">
                 <div class="card-body">
-                    <!-- <h5 class="card-title mb-3">交易地區分佈</h5> -->
-                    <div id="world-map" style="height: 400px; width: 100%;"></div>
+                    <div class="row">
+                        <!-- 高風險國家排名 - 左側 -->
+                        <div class="col-md-3">
+                            <h6 class="mb-3">高風險國家排名</h6>
+                            <div id="high-risk-countries" style="height: 350px; overflow-y: auto;">
+                                <div class="text-center text-muted py-5">
+                                    <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                    <p>執行規則後顯示排名</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 世界地圖 - 右側 -->
+                        <div class="col-md-9">
+                            <div id="world-map" style="height: 400px; width: 100%;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -627,7 +641,7 @@
                     const row = document.createElement('tr');
                     row.setAttribute('data-id', tx.id);
                     const displayCard = tx.card.length === 16
-                        ? tx.card.substring(0, 8) + '********'
+                        ? tx.card.substring(0, 6) + '******' + tx.card.substring(12, 16)
                         : '****************';
 
                     if (tx.card.length !== 16) {
@@ -905,18 +919,43 @@
                     const allRuleIds = Data.rules.map(r => r.id);
                     const insertIndex = allRuleIds.indexOf(ruleId);
 
+                    // 創建沒有關閉按鈕的規則元素
+                    const ruleElement = document.createElement('div');
+                    ruleElement.className = `rule-item ${originalRule.level}`;
+                    ruleElement.draggable = true;
+                    ruleElement.setAttribute('data-id', originalRule.id);
+                    ruleElement.setAttribute('data-level', originalRule.level);
+                    ruleElement.setAttribute('data-description', originalRule.description);
+                    ruleElement.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            <div class="rule-number">${originalRule.id}</div>
+                            <div class="rule-icon ${originalRule.level}">
+                                <i class="fas fa-${
+                                    originalRule.level === 'success' ? 'check' :
+                                    originalRule.level === 'warning' ? 'exclamation-triangle' : 'exclamation-circle'
+                                }"></i>
+                            </div>
+                            <span>${originalRule.text}</span>
+                        </div>
+                        <div class="rule-actions">
+                            <i class="fas fa-arrows-alt handle"></i>
+                        </div>
+                    `;
+                    ruleElement.addEventListener('dragstart', this.dragStart);
+                    ruleElement.addEventListener('mouseenter', () => this.showDescription(ruleElement));
+
                     // 找到應插入的位置
                     let inserted = false;
                     for (let i = 0; i < availableRules.children.length; i++) {
                         const childId = availableRules.children[i].getAttribute('data-id');
                         if (childId && allRuleIds.indexOf(childId) > insertIndex) {
-                            availableRules.insertBefore(this.createRuleClone(originalRule), availableRules.children[i]);
+                            availableRules.insertBefore(ruleElement, availableRules.children[i]);
                             inserted = true;
                             break;
                         }
                     }
                     if (!inserted) {
-                        availableRules.appendChild(this.createRuleClone(originalRule));
+                        availableRules.appendChild(ruleElement);
                     }
                     rule.remove();
                     this.updatePlaceholder();
@@ -1068,7 +1107,7 @@
 
             processTransaction(tx, activeRules, riskLevel, allTransactions) {
                 debugLog(`\n=== 處理交易 ID: ${tx.id} ===`, 'info');
-                debugLog(`卡號: ${tx.card.substring(0,8)}****, 金額: ${tx.amount}, 時間: ${Utils.formatDateTime(tx.timestamp)}`, 'info');
+                debugLog(`卡號: ${tx.card.substring(0,6)}******${tx.card.substring(12,16)}, 金額: ${tx.amount}, 時間: ${Utils.formatDateTime(tx.timestamp)}`, 'info');
 
                 const row = document.querySelector(`#transaction-table tr[data-id="${tx.id}"]`);
                 const statusCell = row.querySelector('td:first-child');
@@ -1093,7 +1132,7 @@
                             action = rule.action;
                             hitRuleCell.innerHTML = `<span class="badge bg-light text-dark">#${rule.id}</span> ${rule.text}`;
                             debugLog(`🎯 交易命中規則 #${rule.id}! 動作: ${action}`, 'success');
-                            Utils.addLog(`交易 ${tx.card.substring(0,8)}**** (${Data.countryMap[tx.countryCode] || tx.countryCode}) 命中規則 #${rule.id}: ${rule.text}`);
+                            Utils.addLog(`交易 ${tx.card.substring(0,6)}******${tx.card.substring(12,16)} (${Data.countryMap[tx.countryCode] || tx.countryCode}) 命中規則 #${rule.id}: ${rule.text}`);
                             break;
                         }
                     } catch (error) {
@@ -1103,7 +1142,7 @@
                 }
                 if (!matchedRule) {
                     hitRuleCell.textContent = '未命中任何規則';
-                    Utils.addLog(`交易 ${tx.card} (${Data.countryMap[tx.countryCode] || tx.countryCode}) 未命中任何規則，採用${riskLevel}風險預設行為`);
+                    Utils.addLog(`交易 ${tx.card.substring(0,6)}******${tx.card.substring(12,16)} (${Data.countryMap[tx.countryCode] || tx.countryCode}) 未命中任何規則，採用${riskLevel}風險預設行為`);
                 }
 
                 tx.action = action;
@@ -1346,6 +1385,10 @@
                     });
 
                     chart.hideLoading();
+                    
+                    // 更新高風險國家排名列表
+                    this.updateHighRiskCountriesRanking(highRiskCounts, countryCounts);
+                    
                     Utils.addLog(`地圖更新完成: 顯示 ${mapData.length} 個地區的高風險交易資料`);
                 } catch (error) {
                     chart.hideLoading();
@@ -1353,55 +1396,201 @@
                 }
             },
 
+            updateHighRiskCountriesRanking(highRiskCounts, countryCounts) {
+                const rankingContainer = document.getElementById('high-risk-countries');
+                if (!rankingContainer) return;
+
+                // 生成排名數據
+                const rankingData = Array.from(highRiskCounts.entries())
+                    .map(([countryCode, highRiskCount]) => ({
+                        countryCode,
+                        countryName: Data.countryMap[countryCode] || countryCode,
+                        highRiskCount,
+                        totalCount: countryCounts.get(countryCode) || 0,
+                        percentage: Math.round((highRiskCount / (countryCounts.get(countryCode) || 1)) * 100)
+                    }))
+                    .sort((a, b) => b.percentage - a.percentage) // 按高風險比例排序
+                    .slice(0, 10); // 只顯示前10名
+
+                if (rankingData.length === 0) {
+                    rankingContainer.innerHTML = `
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                            <p>暫無高風險交易數據</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 生成排名列表HTML
+                const rankingHTML = rankingData.map((item, index) => `
+                    <div class="ranking-item d-flex align-items-center mb-2 p-2 bg-light rounded">
+                        <div class="ranking-number me-2">
+                            <span class="badge ${index < 3 ? 'bg-danger' : 'bg-secondary'}">${index + 1}</span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">${item.countryName}</div>
+                            <small class="text-muted">
+                                高風險: ${item.highRiskCount} / 總計: ${item.totalCount} (${item.percentage}%)
+                            </small>
+                        </div>
+                        <div class="risk-count">
+                            <span class="badge bg-danger">${item.highRiskCount}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+                rankingContainer.innerHTML = `
+                    <div class="ranking-header mb-3">
+                        <small class="text-muted">依高風險比例排序</small>
+                    </div>
+                    ${rankingHTML}
+                `;
+            },
+
             updateHourlyRiskChart() {
                 const chart = this.charts.hourlyRisk;
                 if (!chart) return;
 
-                const hourlyData = Array.from({ length: 24 }, () => ({ low: 0, medium: 0, high: 0, total: 0 }));
+                // 收集所有交易數據並按時間分組
+                const timeSeriesData = new Map();
+                
                 document.querySelectorAll('#transaction-table tr').forEach(row => {
                     const txId = row.getAttribute('data-id');
                     const tx = TransactionManager.transactions.find(t => t.id == txId);
                     if (!tx) return;
 
-                    const hour = new Date(tx.timestamp).getHours();
+                    const txDate = new Date(tx.timestamp);
+                    // 創建12小時間隔的時間鍵 (如：1/1 0:00, 1/1 12:00)
+                    const dateKey = `${txDate.getMonth() + 1}/${txDate.getDate()} ${txDate.getHours() < 12 ? '0:00' : '12:00'}`;
+                    
+                    if (!timeSeriesData.has(dateKey)) {
+                        timeSeriesData.set(dateKey, { low: 0, medium: 0, high: 0, total: 0, timestamp: txDate });
+                    }
+
                     const statusIcon = row.querySelector('td:first-child i');
                     const riskLevel = statusIcon?.classList.contains('text-success') ? 'low' :
                                      statusIcon?.classList.contains('text-warning') ? 'medium' :
                                      statusIcon?.classList.contains('text-danger') ? 'high' : 'medium';
 
-                    hourlyData[hour][riskLevel]++;
-                    hourlyData[hour].total++;
+                    timeSeriesData.get(dateKey)[riskLevel]++;
+                    timeSeriesData.get(dateKey).total++;
                 });
 
+                // 按時間排序並準備圖表數據
+                const sortedData = Array.from(timeSeriesData.entries())
+                    .sort((a, b) => a[1].timestamp - b[1].timestamp);
+
+                const timeLabels = sortedData.map(([label]) => label);
+                const lowRiskData = sortedData.map(([, data]) => data.low);
+                const mediumRiskData = sortedData.map(([, data]) => data.medium);
+                const highRiskData = sortedData.map(([, data]) => data.high);
+
                 chart.setOption({
-                    title: { text: '各時段交易風險分佈', subtext: '按小時統計的不同風險等級交易數量', left: 'center', top: 10 },
-                    legend: { data: ['低風險', '中風險', '高風險'], left: '10%', bottom: 10 },
-                    toolbox: { feature: { saveAsImage: {}, dataView: {} } },
+                    title: { 
+                        text: '交易風險時序分佈', 
+                        subtext: '按實際日期時間統計的風險等級交易數量', 
+                        left: 'center', 
+                        top: 10 
+                    },
+                    legend: { 
+                        data: ['低風險', '中風險', '高風險'], 
+                        left: '10%', 
+                        bottom: 50 
+                    },
+                    toolbox: { 
+                        feature: { 
+                            saveAsImage: {}, 
+                            dataView: {},
+                            dataZoom: { yAxisIndex: 'none' }
+                        } 
+                    },
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: { type: 'shadow' },
                         formatter: params => {
                             let total = 0;
                             let result = `${params[0].axisValueLabel}<br>`;
-                            params.forEach(p => { total += p.value; result += `${p.marker} ${p.seriesName}: ${p.value}<br>`; });
+                            
+                            // 按照高風險→中風險→低風險的順序重新排列
+                            const orderedParams = [];
+                            const highRisk = params.find(p => p.seriesName === '高風險');
+                            const mediumRisk = params.find(p => p.seriesName === '中風險');
+                            const lowRisk = params.find(p => p.seriesName === '低風險');
+                            
+                            if (highRisk) orderedParams.push(highRisk);
+                            if (mediumRisk) orderedParams.push(mediumRisk);
+                            if (lowRisk) orderedParams.push(lowRisk);
+                            
+                            orderedParams.forEach(p => { 
+                                total += p.value; 
+                                result += `${p.marker} ${p.seriesName}: ${p.value}<br>`; 
+                            });
                             return result + `<b>總計: ${total}</b>`;
                         }
                     },
-                    xAxis: { data: Array.from({ length: 24 }, (_, i) => `${i}:00`), name: '小時', axisLine: { onZero: true }, splitLine: { show: false } },
-                    yAxis: { name: '交易數量' },
-                    grid: { left: '3%', right: '4%', bottom: '15%', top: '15%', containLabel: true },
+                    xAxis: { 
+                        type: 'category',
+                        data: timeLabels, 
+                        name: '日期時間', 
+                        axisLine: { onZero: true }, 
+                        splitLine: { show: false },
+                        axisLabel: {
+                            rotate: 45,
+                            fontSize: 10
+                        }
+                    },
+                    yAxis: { 
+                        name: '交易數量',
+                        type: 'value'
+                    },
+                    grid: { 
+                        left: '3%', 
+                        right: '4%', 
+                        bottom: '25%', 
+                        top: '15%', 
+                        containLabel: true 
+                    },
+                    dataZoom: [
+                        {
+                            type: 'slider',
+                            show: true,
+                            xAxisIndex: [0],
+                            start: 0,
+                            end: 100,
+                            bottom: 15
+                        }
+                    ],
                     series: [
-                        { name: '低風險', type: 'bar', stack: '風險', data: hourlyData.map(h => h.low), itemStyle: { color: '#4CAF50' },
-                          emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } } },
-                        { name: '中風險', type: 'bar', stack: '風險', data: hourlyData.map(h => h.medium), itemStyle: { color: '#FFB300' },
-                          emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } } },
-                        { name: '高風險', type: 'bar', stack: '風險', data: hourlyData.map(h => h.high), itemStyle: { color: '#E57373' },
-                          emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } } }
+                        { 
+                            name: '低風險', 
+                            type: 'bar', 
+                            stack: '風險', 
+                            data: lowRiskData, 
+                            itemStyle: { color: '#4CAF50' },
+                            emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } } 
+                        },
+                        { 
+                            name: '中風險', 
+                            type: 'bar', 
+                            stack: '風險', 
+                            data: mediumRiskData, 
+                            itemStyle: { color: '#FFB300' },
+                            emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } } 
+                        },
+                        { 
+                            name: '高風險', 
+                            type: 'bar', 
+                            stack: '風險', 
+                            data: highRiskData, 
+                            itemStyle: { color: '#E57373' },
+                            emphasis: { itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.3)' } } 
+                        }
                     ]
                 });
 
                 chart.hideLoading();
-                Utils.addLog('已更新風險時間分佈圖表');
+                Utils.addLog(`已更新風險時序分佈圖表: 顯示 ${timeLabels.length} 個時間點的數據`);
             },
 
             updateRiskPieChart() {
