@@ -245,19 +245,7 @@ body, html {
     border-top-right-radius: 10px;
 }
 
-.transaction-table tbody tr:nth-child(odd) {
-    background-color: #f5f0ff;
-}
 
-.transaction-table tbody tr:hover {
-    background-color: #e6e0ff;
-}
-
-.transaction-table td {
-    padding: 10px 15px;
-    border-top: 1px solid #e9e3ff;
-    font-family: Poppins-Light;
-}
 
 .risk-badge {
     padding: 3px 10px;
@@ -338,9 +326,9 @@ tr.highlighted {
 .transaction-table {
     width: 100%;
     min-width: 1600px;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
     table-layout: fixed;
+    background-color: transparent;
 }
 
 .transaction-table thead th {
@@ -349,7 +337,7 @@ tr.highlighted {
     z-index: 10;
     background-color: #9072e8;
     color: white;
-    padding: 12px 15px;
+    padding: 8px 6px;
     font-family: Poppins-Medium;
     border: none;
     white-space: normal;
@@ -360,19 +348,18 @@ tr.highlighted {
 
 .transaction-table th:nth-child(1) { width: 60px; }   /* 狀態 */
 .transaction-table th:nth-child(2) { width: 120px; }  /* 卡號 */
-.transaction-table th:nth-child(3) { width: 140px; }  /* 時間 */
-.transaction-table th:nth-child(4) { width: 70px; }   /* 地區 */
-.transaction-table th:nth-child(5) { width: 80px; }   /* 金額 */
-.transaction-table th:nth-child(6) { width: 60px; }   /* MCC */
-.transaction-table th:nth-child(7) { width: 80px; }   /* 設備風險 */
-.transaction-table th:nth-child(8) { width: 80px; }   /* 偽冒設備 */
-.transaction-table th:nth-child(9) { width: 80px; }   /* 卡號異常 */
-.transaction-table th:nth-child(10) { width: 80px; }  /* 卡號測試 */
-.transaction-table th:nth-child(11) { width: 50px; }  /* VPN */
-.transaction-table th:nth-child(12) { width: 50px; }  /* Tor */
-.transaction-table th:nth-child(13) { width: 90px; }  /* Webdriver */
-.transaction-table th:nth-child(14) { width: 80px; }  /* 驗證結果 */
-.transaction-table th:nth-child(15) { width: 200px; } /* 命中規則 */
+.transaction-table th:nth-child(3) { width: 100px; }  /* 時間 */
+.transaction-table th:nth-child(4) { width: 65px; }   /* 地區 */
+.transaction-table th:nth-child(5) { width: 65px; }   /* 金額 */
+.transaction-table th:nth-child(6) { width: 65px; }   /* MCC */
+.transaction-table th:nth-child(7) { width: 75px; }   /* 偽冒設備 */
+.transaction-table th:nth-child(8) { width: 75px; }   /* 卡號異常 */
+.transaction-table th:nth-child(9) { width: 75px; }   /* 卡號測試 */
+.transaction-table th:nth-child(10) { width: 50px; }  /* VPN */
+.transaction-table th:nth-child(11) { width: 50px; }  /* Tor */
+.transaction-table th:nth-child(12) { width: 60px; }  /* Webdriver */
+.transaction-table th:nth-child(13) { width: 70px; }  /* 驗證結果 */
+.transaction-table th:nth-child(14) { width: 200px; } /* 命中規則 */
 .transaction-table thead th:first-child {
     border-top-left-radius: 10px;
 }
@@ -383,12 +370,42 @@ tr.highlighted {
 
 /* 表格单元格样式 */
 .transaction-table td {
-    padding: 10px 15px;
-    border-top: 1px solid #e9e3ff;
+    padding: 6px 8px;
+    border: none;
+    border-bottom: 1px solid #e9e3ff;
     font-family: Poppins-Light;
-    white-space: normal; /* 允许文本换行 */
+    white-space: normal;
     overflow-wrap: break-word;
     word-wrap: break-word;
+    font-size: 12px;
+    background-color: inherit;
+}
+
+.transaction-table th {
+    font-size: 13px;
+}
+
+/* 表格行樣式 */
+.transaction-table tbody tr {
+    background-color: #ffffff;
+}
+
+.transaction-table tbody tr:nth-child(odd) {
+    background-color: #f8f6ff !important;
+}
+
+.transaction-table tbody tr:nth-child(even) {
+    background-color: #ffffff !important;
+}
+
+.transaction-table tbody tr:hover {
+    background-color: #e6e0ff !important;
+}
+
+/* 卡號測試欄位右側增加間距 */
+.transaction-table th:nth-child(9),
+.transaction-table td:nth-child(9) {
+    padding-right: 20px;
 }
 
 /* 改进表格容器样式 */
@@ -398,15 +415,8 @@ tr.highlighted {
     overflow-x: auto;
     border-radius: 12px;
     background-color: white;
-}
-
-/* 表格欄位字體大小調整 */
-.transaction-table td {
-    font-size: 12px;
-}
-
-.transaction-table th {
-    font-size: 13px;
+    padding: 0;
+    margin: 0;
 }
 
 /* Badge 樣式調整 */

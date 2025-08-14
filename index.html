@@ -117,20 +117,19 @@
                             <table class="table transaction-table">
                                 <thead>
                                 <tr>
-                                    <th>狀態</th>
-                                    <th>卡號</th>
-                                    <th>時間</th>
-                                    <th>地區</th>
-                                    <th class="text-end">金額</th>
-                                    <th>MCC</th>
-                                    <th class="text-end">設備風險</th>
-                                    <th class="text-end">偽冒設備</th>
-                                    <th class="text-end">卡號異常</th>
-                                    <th class="text-end">卡號測試</th>
-                                    <th>VPN</th>
-                                    <th>Tor</th>
-                                    <th>Webdriver</th>
-                                    <th>驗證結果</th>
+                                    <th style="width: 60px;">狀態</th>
+                                    <th style="width: 120px;">卡號</th>
+                                    <th style="width: 100px;">時間</th>
+                                    <th style="width: 65px;" class="text-center">地區</th>
+                                    <th style="width: 65px;" class="text-center">金額</th>
+                                    <th style="width: 65px;" class="text-center">MCC</th>
+                                    <th style="width: 75px;" class="text-end">偽冒設備</th>
+                                    <th style="width: 75px;" class="text-end">卡號異常</th>
+                                    <th style="width: 75px;" class="text-end">卡號測試</th>
+                                    <th style="width: 50px;">VPN</th>
+                                    <th style="width: 50px;">Tor</th>
+                                    <th style="width: 60px;">Webdriver</th>
+                                    <th style="width: 70px;">驗證結果</th>
                                     <th>命中規則</th>
                                 </tr>
                                 </thead>
@@ -341,14 +340,6 @@
                 
                 // 恢復的原始有用規則
                 {
-                    id: '3',
-                    text: '小金額且設備低風險',
-                    level: 'success',
-                    description: '交易金額低於300元且來自已知安全設備，可自動通過',
-                    condition: tx => tx.amount < 300 && tx.deviceRisk > 0.3,
-                    action: 'APPROVE'
-                },
-                {
                     id: '4',
                     text: '前24小時低風險交易，總金額小於$1000',
                     level: 'success',
@@ -396,14 +387,6 @@
                     action: 'REVIEW'
                 },
                 {
-                    id: '7',
-                    text: '設備中風險',
-                    level: 'warning',
-                    description: '使用者的設備風險評分在-0.3至0.3之間，建議額外監控',
-                    condition: tx => tx.deviceRisk >= -0.3 && tx.deviceRisk <= 0.3,
-                    action: 'REVIEW'
-                },
-                {
                     id: '8',
                     text: '中高金額',
                     level: 'warning',
@@ -415,7 +398,7 @@
                     id: '9',
                     text: '旅遊與娛樂 MCC (T&E transaction)',
                     level: 'warning',
-                    description: '旅遊與娛樂 MCC (T&E transaction) - 中風險',
+                    description: '旅遊與娛樂 MCC (T&E transaction) - 中風險。包含：4111(航空公司), 4112(客運), 4119(救護車服務), 4121(計程車/禮車), 4131(公車), 4411(汽船/郵輪), 4511(航空公司), 5811-5813(餐廳), 7011-7012(住宿), 7032-7033(運動/娛樂營地), 7991-7999(旅遊服務)',
                     condition: tx => ['4111', '4112', '4119', '4121', '4131', '4411', '4511', '5811', '5812', '5813', '7011', '7012', '7032', '7033', '7991', '7992', '7993', '7994', '7995', '7996', '7997', '7998', '7999'].includes(tx.mcc),
                     action: 'REVIEW'
                 },
@@ -423,7 +406,7 @@
                     id: '10',
                     text: '高風險 MCC (High-brand Risk MCCs)',
                     level: 'warning',
-                    description: '高風險 MCC (High-brand Risk MCCs) - 中風險',
+                    description: '高風險 MCC (High-brand Risk MCCs) - 中風險。包含：5967(直銷), 5968-5969(直銷/郵購), 6012(金融機構), 6051(非金融機構-外幣/旅行支票), 7273(約會服務), 7801-7802(博弈), 9311(稅務繳費)',
                     condition: tx => ['5967', '5968', '5969', '6012', '6051', '7273', '7801', '7802', '9311'].includes(tx.mcc),
                     action: 'REVIEW'
                 },
@@ -460,14 +443,6 @@
                     action: 'BLOCK'
                 },
                 {
-                    id: '13',
-                    text: '設備高風險',
-                    level: 'danger',
-                    description: '設備風險評分小於-0.3，可能表示有異常活動',
-                    condition: tx => tx.deviceRisk < -0.3,
-                    action: 'BLOCK'
-                },
-                {
                     id: '14',
                     text: '中高金額且來自高風險地區',
                     level: 'danger',
@@ -491,7 +466,7 @@
                 }
             ],
 
-            defaultRuleIds: ['15', '14', '13', '12', '11', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1']
+            defaultRuleIds: ['15', '14', '12', '11', '10', '9', '8', '6', '5', '4', '2', '1']
         };
         // 交易管理模塊
         const TransactionManager = {
@@ -509,7 +484,7 @@
                         // 使用文件中的數據，如果缺少新欄位則補充
                         this.transactions = data.map(tx => ({
                             ...tx,
-                            // 確保新欄位存在，如果不存在則添加預設值
+                            // 確保新欄位存在，如果不存在則添加預設值 (已移除 deviceRisk)
                             mcc: tx.mcc || this.generateMCC(),
                             fraudDeviceModel: tx.fraudDeviceModel !== undefined ? tx.fraudDeviceModel : Math.random(),
                             cardAbnormalModel: tx.cardAbnormalModel !== undefined ? tx.cardAbnormalModel : Math.random() * 2 - 1,
@@ -568,156 +543,13 @@
             generateTransactions(count = 200) {
                 this.transactions = [];
                 const countryCodes = Object.keys(Data.countryMap).concat('158');
-                const deviceRiskLevels = [-0.9, -0.8, -0.7, -0.6, -0.5, -0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
                 const bankCardPrefixes = ['4', '5', '3', '6'];
                 const amountRanges = [
                     { min: 10, max: 300 }, { min: 301, max: 800 },
                     { min: 801, max: 2000 }, { min: 2001, max: 5000 }
                 ];
 
-                // 規則命中機率
-                const ruleProbabilities = {
-                    '1': 0.05, // 低風險，10% / 2
-                    '2': 0.05, // 低風險，10% / 2
-                    '3': 0.10, // 中風險，20% / 2
-                    '4': 0.10, // 中風險，20% / 2
-                    '5': 0.0167, // 高風險，5% / 3
-                    '6': 0.005, // 高風險，5% / 3
-                    '7': 0.0166, // 高風險，5% / 3
-                    'none': 0.67 // 未命中規則
-                };
-
-                // 儲存卡號與其交易歷史的映射，用於規則2和規則7
-                const cardTransactionMap = new Map();
-                // 追蹤規則2和規則 мови7的命中索引
-                const rule2or7Indices = [];
-
-                // 輔助函數：根據機率選擇目標規則
-                function chooseTargetRule(currentIndex) {
-                    // 檢查與最近的規則2或7命中交易的間隔
-                    if (rule2or7Indices.length > 0) {
-                        const lastRule2or7Index = rule2or7Indices[rule2or7Indices.length - 1];
-                        const gap = currentIndex - lastRule2or7Index;
-                        if (gap < 3) {
-                            // 間隔小於3，禁止命中規則2或7
-                            const adjustedProbs = { ...ruleProbabilities, '2': 0, '7': 0 };
-                            let total = Object.values(adjustedProbs).reduce((sum, p) => sum + p, 0);
-                            for (let key in adjustedProbs) {
-                                adjustedProbs[key] /= total; // 重新正規化機率
-                            }
-                            const rand = Math.random();
-                            let cumulative = 0;
-                            for (const [ruleId, prob] of Object.entries(adjustedProbs)) {
-                                cumulative += prob;
-                                if (rand < cumulative) return ruleId;
-                            }
-                        } else if (gap >= 3 && gap <= 7) {
-                            // 間隔在3到7之間，允許命中規則2或7
-                            const rand = Math.random();
-                            let cumulative = 0;
-                            for (const [ruleId, prob] of Object.entries(ruleProbabilities)) {
-                                cumulative += prob;
-                                if (rand < cumulative) return ruleId;
-                            }
-                        } else {
-                            // 間隔超過7，強制命中規則2或7
-                            const forcedRules = { '2': 0.5, '7': 0.5 };
-                            const rand = Math.random();
-                            let cumulative = 0;
-                            for (const [ruleId, prob] of Object.entries(forcedRules)) {
-                                cumulative += prob;
-                                if (rand < cumulative) return ruleId;
-                            }
-                        }
-                    } else {
-                        // 尚未有規則2或7命中，按正常機率選擇
-                        const rand = Math.random();
-                        let cumulative = 0;
-                        for (const [ruleId, prob] of Object.entries(ruleProbabilities)) {
-                            cumulative += prob;
-                            if (rand < cumulative) return ruleId;
-                        }
-                    }
-                    return 'none'; // 默認未命中
-                }
-
-                // 輔助函數：生成符合特定規則的交易
-                function generateTransactionForRule(ruleId, card, timestamp, prevTxs) {
-                    let amount, countryCode, deviceRisk, isVerified, cumulativeAmount;
-
-                    switch (ruleId) {
-                        case '1':
-                            // 小金額且設備低風險
-                            amount = Math.floor(Math.random() * (300 - 10 + 1)) + 10;
-                            deviceRisk = deviceRiskLevels.filter(r => r > 0.3)[Math.floor(Math.random() * deviceRiskLevels.filter(r => r > 0.3).length)];
-                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
-                            isVerified = Math.random() < 0.75;
-                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
-                            break;
-                        case '2':
-                            // 前24小時低風險交易，總金額小於$1000
-                            amount = Math.floor(Math.random() * (500 - 10 + 1)) + 10;
-                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
-                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
-                            isVerified = true;
-                            // 確保卡號有前期低風險交易
-                            const prevTx = prevTxs.find(t => t.card === card && t.action === 'APPROVE');
-                            cumulativeAmount = prevTx ? prevTx.cumulativeAmount + amount : amount;
-                            if (cumulativeAmount >= 1000) cumulativeAmount = 999; // 確保總金額<1000
-                            break;
-                        case '3':
-                            // 設備中風險
-                            amount = Math.floor(Math.random() * (5000 - 10 + 1)) + 10;
-                            deviceRisk = deviceRiskLevels.filter(r => r >= -0.3 && r < 0.3)[Math.floor(Math.random() * deviceRiskLevels.filter(r => r >= -0.3 && r < 0.3).length)];
-                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
-                            isVerified = Math.random() < 0.75;
-                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
-                            break;
-                        case '4':
-                            // 中高金額
-                            amount = Math.floor(Math.random() * (5000 - 301 + 1)) + 301;
-                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
-                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
-                            isVerified = Math.random() < 0.75;
-                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
-                            break;
-                        case '5':
-                            // 中高金額且來自高風險地區
-                            amount = Math.floor(Math.random() * (5000 - 301 + 1)) + 301;
-                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
-                            countryCode = ['004', '116', '408'][Math.floor(Math.random() * 3)];
-                            isVerified = Math.random() < 0.75;
-                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
-                            break;
-                        case '6':
-                            // 設備高風險
-                            amount = Math.floor(Math.random() * (5000 - 10 + 1)) + 10;
-                            deviceRisk = deviceRiskLevels.filter(r => r < -0.3)[Math.floor(Math.random() * deviceRiskLevels.filter(r => r < -0.3).length)];
-                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
-                            isVerified = Math.random() < 0.75;
-                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
-                            break;
-                        case '7':
-                            // 15分鐘內來自不同地區
-                            amount = Math.floor(Math.random() * (5000 - 10 + 1)) + 10;
-                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
-                            const prevTxFor7 = prevTxs.find(t => t.card === card);
-                            countryCode = prevTxFor7 ? countryCodes.filter(c => c !== prevTxFor7.countryCode)[Math.floor(Math.random() * (countryCodes.length - 1))] : countryCodes[Math.floor(Math.random() * countryCodes.length)];
-                            isVerified = Math.random() < 0.75;
-                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
-                            break;
-                        default:
-                            // 未命中任何規則
-                            amount = Math.floor(Math.random() * (5000 - 10 + 1)) + 10;
-                            deviceRisk = deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)];
-                            countryCode = countryCodes[Math.floor(Math.random() * countryCodes.length)];
-                            isVerified = Math.random() < 0.75;
-                            cumulativeAmount = amount + (Math.random() < 0.4 ? Math.floor(Math.random() * 3000) : 0);
-                            break;
-                    }
-
-                    return { amount, countryCode, deviceRisk, isVerified, cumulativeAmount };
-                }
+                // 簡化交易生成，不需要複雜的規則生成邏輯
 
                 // 簡化生成交易 - 只生成基本數據和新欄位
                 for (let i = 0; i < count; i++) {
@@ -733,7 +565,6 @@
                         card,
                         countryCode,
                         amount,
-                        deviceRisk: deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)],
                         timestamp,
                         // 新增欄位
                         mcc: this.generateMCC(),
@@ -749,7 +580,7 @@
                     this.transactions.push(tx);
                 }
 
-                // 移除複雜的規則特定生成邏輯，簡化處理
+                // 使用簡化的交易生成方式
 
                 // 確保台灣交易
                 const taiwanTxCount = this.transactions.filter(tx => tx.countryCode === '158').length;
@@ -765,7 +596,6 @@
                             card,
                             countryCode: '158',
                             amount,
-                            deviceRisk: deviceRiskLevels[Math.floor(Math.random() * deviceRiskLevels.length)],
                             timestamp: Utils.getRandomTime(),
                             // 新增欄位
                             mcc: this.generateMCC(),
@@ -808,14 +638,9 @@
                         <td><i class="fas fa-circle-notch fa-spin text-secondary"></i></td>
                         <td class="font-monospace">${displayCard}</td>
                         <td>${Utils.formatDateTime(tx.timestamp)}</td>
-                        <td>${Data.countryMap[tx.countryCode] || tx.countryCode}</td>
-                        <td class="text-end">${tx.amount.toLocaleString()}</td>
-                        <td>${tx.mcc || 'N/A'}</td>
-                        <td class="text-end">
-                            <span class="risk-badge ${
-                                tx.deviceRisk > 0.3 ? 'success' : tx.deviceRisk >= -0.3 ? 'warning' : 'danger'
-                            }">${tx.deviceRisk ? tx.deviceRisk.toFixed(1) : 'N/A'}</span>
-                        </td>
+                        <td class="text-center">${Data.countryMap[tx.countryCode] || tx.countryCode}</td>
+                        <td class="text-center">${tx.amount.toLocaleString()}</td>
+                        <td class="text-center">${tx.mcc || 'N/A'}</td>
                         <td class="text-end">
                             <span class="risk-badge ${
                                 tx.fraudDeviceModel > 0.5 ? 'success' : tx.fraudDeviceModel >= 0.25 ? 'warning' : 'danger'
@@ -1145,7 +970,7 @@
             resetTransactionStatus() {
                 this.elements.transactionTable.querySelectorAll('tr').forEach(row => {
                     row.querySelector('td:first-child').innerHTML = '<i class="fas fa-circle-notch fa-spin text-secondary"></i>';
-                    row.querySelector('td:nth-child(15)').textContent = '';
+                    row.querySelector('td:nth-child(14)').textContent = '';
                     row.classList.remove('highlighted');
                 });
             },
@@ -1247,7 +1072,7 @@
 
                 const row = document.querySelector(`#transaction-table tr[data-id="${tx.id}"]`);
                 const statusCell = row.querySelector('td:first-child');
-                const hitRuleCell = row.querySelector('td:nth-child(15)');
+                const hitRuleCell = row.querySelector('td:nth-child(14)');
                 let action = this.getDefaultAction(riskLevel);
                 let matchedRule = null;
 
@@ -1456,11 +1281,11 @@
                         if (!tx) return;
 
                         const isHighRisk = row.querySelector('td:first-child i')?.classList.contains('text-danger');
-                        const hitRule = row.querySelector('td:nth-child(15) span')?.textContent || '';
+                        const hitRule = row.querySelector('td:nth-child(14) span')?.textContent || '';
                         countryCounts.set(tx.countryCode, (countryCounts.get(tx.countryCode) || 0) + 1);
                         if (isHighRisk) {
                             highRiskCounts.set(tx.countryCode, (highRiskCounts.get(tx.countryCode) || 0) + 1);
-                            if (hitRule.includes('#11') || hitRule.includes('#12') || hitRule.includes('#13') || hitRule.includes('#14') || hitRule.includes('#15')) {
+                            if (hitRule.includes('#11') || hitRule.includes('#12') || hitRule.includes('#14') || hitRule.includes('#15')) {
                                 highRiskRuleCounts.set(tx.countryCode, (highRiskRuleCounts.get(tx.countryCode) || 0) + 1);
                             }
                         }
