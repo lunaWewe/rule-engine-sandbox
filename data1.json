@@ -207,7 +207,7 @@
     "vpn": false,
     "tor": false,
     "webdriver": false,
-    "verificationResult": "成功"
+    "verificationResult": "失敗"
   },
   {
     "id": 15,
@@ -357,7 +357,7 @@
     "vpn": false,
     "tor": false,
     "webdriver": false,
-    "verificationResult": "成功"
+    "verificationResult": "失敗"
   },
   {
     "id": 25,
@@ -1017,7 +1017,7 @@
     "vpn": false,
     "tor": false,
     "webdriver": false,
-    "verificationResult": "成功"
+    "verificationResult": "失敗"
   },
   {
     "id": 69,
@@ -1197,7 +1197,7 @@
     "vpn": false,
     "tor": false,
     "webdriver": false,
-    "verificationResult": "成功"
+    "verificationResult": "失敗"
   },
   {
     "id": 81,
@@ -2592,7 +2592,7 @@
     "vpn": false,
     "tor": false,
     "webdriver": false,
-    "verificationResult": "成功"
+    "verificationResult": "失敗"
   },
   {
     "id": 174,
@@ -2772,7 +2772,7 @@
     "vpn": false,
     "tor": false,
     "webdriver": false,
-    "verificationResult": "成功"
+    "verificationResult": "失敗"
   },
   {
     "id": 186,
@@ -2787,7 +2787,7 @@
     "vpn": false,
     "tor": false,
     "webdriver": false,
-    "verificationResult": "成功"
+    "verificationResult": "失敗"
   },
   {
     "id": 187,
@@ -2952,7 +2952,7 @@
     "vpn": false,
     "tor": false,
     "webdriver": false,
-    "verificationResult": "成功"
+    "verificationResult": "失敗"
   },
   {
     "id": 198,
